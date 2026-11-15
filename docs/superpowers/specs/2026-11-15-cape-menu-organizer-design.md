@@ -26,6 +26,8 @@ The picker is seeded with known cape references and saved layout references imme
 
 Original teleport menus have per-context visibility switches. Spellbook/Features originals and individual children have shared visibility switches. Original visibility does not disable independent custom shortcuts. Whole native submenu references respect selected child visibility. Empty custom groups/native submenu references are omitted. The active native default entry and its complete submenu are retained regardless of masking to preserve existing click choices. Shift-right-click swap editing is left intact.
 
+Omit a custom root shortcut when it duplicates the current native default leaf action on the same cape. Preserve the native row, saved occurrence/color, and all deliberately grouped duplicates. The shortcut returns if the active default changes. Match native metadata/callback/context; known direct-versus-submenu Home and Crafting Guild operations can differ in identifier while representing the same destination. A matching name from another item or a different callback must not trigger suppression.
+
 ## Native action resolution
 
 Read only current native max cape inventory/worn widgets and menus through public APIs. Never store executable action metadata or synthesize server actions. Copy current leaf identifiers, item/widget/slot/world parameters, flags and callbacks. A copied native submenu is a presentation container with cloned current children; selecting a leaf performs only that native action.

@@ -41,6 +41,8 @@ Custom groups cannot contain other custom groups. A complete native Spellbook or
 
 Your active native default entry stays at the top; custom entries follow in layout order. The active default submenu is retained intact even if its visibility box is off, to protect the current click setting. Hold Shift and right-click to configure clicks through core Menu Entry Swapper, then release Shift to inspect your organized menu.
 
+If a custom top-level shortcut duplicates the active native default action, the custom row is omitted for that menu opening. The saved shortcut and color remain unchanged, so it returns when another action is the default. Intentional copies inside custom groups are preserved. This avoids two Home rows with native left-click Home, without changing the native click action.
+
 Changes save automatically and apply on the next menu opening. Reset requires confirmation. Invalid saved data disables editing and menu replacement until you explicitly reset; it is not silently overwritten. Disabling the plugin restores normal menus on the next opening.
 
 ## Development
@@ -68,6 +70,7 @@ A passing build verifies local logic, not actual game actions. The player must c
 - Hide original utility menus/entries and verify independent custom shortcuts remain usable. Whole submenu references should respect child visibility.
 - Test Feldip Hills in both contexts and confirm it reaches the intended location. An existing Carnivorous chinchompas shortcut should now show Feldip Hills.
 - Test every assigned action, normal restrictions/confirmations, independent duplicate colors, removal/reordering, and persistence across restart/profile changes.
+- With native Home left-click and a custom root Home shortcut, confirm only native Home appears at the top. Grouped Home copies must remain. With another native default, the custom root Home must return; duplicate root Crafting Guild should similarly be omitted when it is the native default.
 - Confirm existing clicks and Shift-right-click configuration, normal non-teleport item actions, unrelated items/bank menus, cape slot changes, disable/reset.
 
 If native action data is unrecognized, the original menu is retained. A layout that would exceed the menu capacity also falls back before mutation.

@@ -15,6 +15,53 @@ public class CapeMenuTransformerTest
 	private final CapeContext worn = new CapeContext("worn", 100, 3);
 
 	@Test
+	public void redundantRootHomeIsOmittedButSavedAndNestedCopiesArePreserved()
+	{
+		MenuFixture menu = fixture("Guild Teleports");
+		MenuEntry nativeHome = menu.action("Home", 4);
+		MenuLayout layout = new MenuLayout();
+		MenuLayout.Entry customHome = layout.addTeleport(null, "Home");
+		customHome.color = 0xff0000;
+		String group = layout.addGroup("Favorites").id;
+		layout.addTeleport(group, "Home");
+		layout.addTeleport(group, "Home");
+		transformer.transform(menu, layout, worn);
+		assertEquals("Home,Favorites,Wear,Cancel", names(menu));
+		assertSame(nativeHome, menu.getMenuEntries()[menu.getMenuEntries().length - 1]);
+		assertEquals("Home,Home", names(named(menu, "Favorites").getSubMenu()));
+		assertEquals("Home", layout.entries.get(0).destination);
+		assertEquals(Integer.valueOf(0xff0000), layout.entries.get(0).color);
+	}
+
+	@Test
+	public void rootHomeReturnsWhenAnotherActionIsDefaultAndCraftingDuplicateIsOmitted()
+	{
+		MenuFixture menu = fixture("Teleports");
+		MenuEntry crafting = menu.action("Crafting Guild", 4);
+		MenuLayout layout = new MenuLayout();
+		layout.addTeleport(null, "Home");
+		layout.addTeleport(null, "Crafting Guild");
+		transformer.transform(menu, layout, inventory);
+		assertEquals("Crafting Guild,Home,Wear,Cancel", names(menu));
+		assertSame(crafting, menu.getMenuEntries()[menu.getMenuEntries().length - 1]);
+	}
+
+	@Test
+	public void matchingTextFromDifferentItemOrNonNativeCallbackDoesNotSuppressShortcut()
+	{
+		MenuFixture otherItem = fixture("Teleports");
+		otherItem.action("Home", 4).setParam0(8);
+		MenuLayout layout = new MenuLayout();
+		layout.addTeleport(null, "Home");
+		transformer.transform(otherItem, layout, inventory);
+		assertEquals("Home,Home,Wear,Cancel", names(otherItem));
+		MenuFixture otherCallback = fixture("Guild Teleports");
+		otherCallback.action("Home", 4).onClick(entry -> {});
+		transformer.transform(otherCallback, layout, worn);
+		assertEquals("Home,Home,Wear,Cancel", names(otherCallback));
+	}
+
+	@Test
 	public void hoverDiscoveryFindsUtilityActionsWithoutChangingNativeMenuOrDefault()
 	{
 		MenuFixture menu = fixture("Teleports");

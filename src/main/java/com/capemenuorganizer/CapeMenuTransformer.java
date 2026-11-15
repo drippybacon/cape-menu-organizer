@@ -151,7 +151,7 @@ final class CapeMenuTransformer
 			else
 			{
 				Action action = actions.get(CapeActionNames.key(entry.destination));
-				if (action != null) { totalEntries += action.entryCount(); }
+				if (action != null && !action.duplicatesDefault(defaultEntry, context)) { totalEntries += action.entryCount(); }
 			}
 		}
 		if (totalEntries > 450) { return unchanged("Menu is too large; original menu retained."); }
@@ -193,7 +193,7 @@ final class CapeMenuTransformer
 			else
 			{
 				Action action = actions.get(CapeActionNames.key(entry.destination));
-				if (action != null)
+				if (action != null && !action.duplicatesDefault(defaultEntry, context))
 				{
 					customDisplayOrder.add(action.copyTo(menu, entry.color));
 				}
@@ -342,6 +342,19 @@ final class CapeMenuTransformer
 				for (Action child : children) { count += child.entryCount(); }
 			}
 			return count;
+		}
+
+		boolean duplicatesDefault(MenuEntry entry, CapeContext context)
+		{
+			if (children != null || entry.getSubMenu() != null || !context.matches(entry) || !nativeAction(entry)
+				|| callback != entry.onClick() || worldViewId != entry.getWorldViewId()
+				|| !CapeActionNames.key(option).equals(CapeActionNames.key(entry.getOption())))
+			{
+				return false;
+			}
+			// Home/Crafting Guild also have direct native ops distinct from submenu ops.
+			return ROOT_TELEPORTS.contains(CapeActionNames.key(reference))
+				|| (identifier == entry.getIdentifier() && itemId == entry.getItemId());
 		}
 
 		MenuEntry copyTo(Menu menu, Integer color)
