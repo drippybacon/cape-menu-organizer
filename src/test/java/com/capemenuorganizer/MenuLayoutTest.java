@@ -14,7 +14,7 @@ public class MenuLayoutTest
 	{
 		MenuLayout layout = MenuLayout.defaults();
 		assertEquals(List.of("Poh", "Guild", "Skill"), layout.entries.stream().map(e -> e.name).collect(Collectors.toList()));
-		assertEquals(List.of("Aldarin", "Brimhaven", "Hosidius", "Pollnivneach", "Prifddinas", "Rellekka", "Rimmington", "Taverley", "Yanille"),
+		assertEquals(List.of("Home", "Aldarin", "Brimhaven", "Hosidius", "Pollnivneach", "Prifddinas", "Rellekka", "Rimmington", "Taverley", "Yanille"),
 			layout.entries.get(0).children.stream().map(e -> e.destination).collect(Collectors.toList()));
 		assertEquals(List.of("Crafting Guild", "Farming Guild", "Fishing Guild", "Hunter Guild", "Warrior's Guild"),
 			layout.entries.get(1).children.stream().map(e -> e.destination).collect(Collectors.toList()));

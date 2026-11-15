@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -54,6 +55,7 @@ final class CapeMenuPanel extends PluginPanel
 	private Runnable reset = () -> {};
 	private boolean editable;
 	private boolean refreshing;
+	private long editorSession;
 
 	CapeMenuPanel(LayoutCodec codec, ColorPickerManager colorPickerManager)
 	{
@@ -63,7 +65,9 @@ final class CapeMenuPanel extends PluginPanel
 		setBorder(BorderFactory.createEmptyBorder(10, 8, 10, 8));
 		JPanel content = new JPanel();
 		content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-		content.add(new JLabel("Cape Menu Organizer"));
+		JLabel title = new JLabel("Cape Menu Organizer");
+		title.setFont(FontManager.getRunescapeBoldFont());
+		content.add(title);
 		content.add(text("Applies to inventory and worn cape. Saves automatically."));
 		JScrollPane scroll = new JScrollPane(tree);
 		scroll.setPreferredSize(new Dimension(200, 260));
@@ -98,22 +102,22 @@ final class CapeMenuPanel extends PluginPanel
 		});
 		addButton("Add group", () ->
 		{
-			String name = JOptionPane.showInputDialog(this, "Group name:", "New group", JOptionPane.PLAIN_MESSAGE);
+			String name = promptForCurrentLayout(() -> JOptionPane.showInputDialog(this, "Group name:", "New group", JOptionPane.PLAIN_MESSAGE));
 			if (name != null) { edit(next -> next.addGroup(name)); }
 		});
 		addButton("Rename", () ->
 		{
 			MenuLayout.Entry selected = selected();
 			if (selected == null || !selected.isGroup()) { return; }
-			String name = JOptionPane.showInputDialog(this, "Group name:", selected.name);
+			String name = promptForCurrentLayout(() -> JOptionPane.showInputDialog(this, "Group name:", selected.name));
 			if (name != null) { edit(next -> next.rename(selected.id, name)); }
 		});
 		addButton("Remove", () ->
 		{
 			MenuLayout.Entry selected = selected();
 			if (selected == null) { return; }
-			if (selected.isGroup() && !selected.children.isEmpty() && JOptionPane.showConfirmDialog(this,
-				"Remove this group and its shortcuts?", "Remove group", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION)
+			if (selected.isGroup() && !selected.children.isEmpty() && !Integer.valueOf(JOptionPane.OK_OPTION).equals(promptForCurrentLayout(() -> JOptionPane.showConfirmDialog(this,
+				"Remove this group and its shortcuts?", "Remove group", JOptionPane.OK_CANCEL_OPTION))))
 			{
 				return;
 			}
@@ -151,12 +155,13 @@ final class CapeMenuPanel extends PluginPanel
 		resetButton.setMargin(new Insets(4, 3, 4, 3));
 		resetButton.addActionListener(event ->
 		{
+			Runnable resetSession = reset;
 			String prompt = editable ? "Replace this menu's layout with defaults?"
 				: "Saved menus cannot be read. Replace both Normal and Shift layouts with defaults?";
 			if (JOptionPane.showConfirmDialog(this, prompt, "Reset layout",
 				JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION)
 			{
-				reset.run();
+				resetSession.run();
 			}
 		});
 		controls.add(resetButton);
@@ -172,7 +177,7 @@ final class CapeMenuPanel extends PluginPanel
 		content.add(text("Select Main menu or a group, then add actions."));
 		visibility.setLayout(new BoxLayout(visibility, BoxLayout.Y_AXIS));
 		JLabel originalsHeading = new JLabel("Show original menus");
-		originalsHeading.setFont(FontManager.getDefaultBoldFont());
+		originalsHeading.setFont(FontManager.getRunescapeFont());
 		originalsHeading.setForeground(ColorScheme.BRAND_ORANGE);
 		originalsHeading.setToolTipText("Custom shortcuts remain available when original menus are hidden.");
 		originalsHeading.setBorder(BorderFactory.createEmptyBorder(18, 0, 0, 0));
@@ -216,6 +221,7 @@ final class CapeMenuPanel extends PluginPanel
 	void showLayout(MenuLayout value, List<String> catalog, Map<String, String> capeActions,
 		String message, boolean allowEdits, Consumer<MenuLayout> onSave, Runnable onReset)
 	{
+		editorSession++;
 		layout = codec.copy(value);
 		save = onSave;
 		reset = onReset;
@@ -289,7 +295,21 @@ final class CapeMenuPanel extends PluginPanel
 	void setStatus(String message)
 	{
 		status.setText(message);
+		status.setRows(Math.max(1, ((message == null ? 0 : message.length()) + 26) / 27));
+		status.setMaximumSize(new Dimension(Integer.MAX_VALUE, status.getPreferredSize().height));
 		status.setVisible(message != null && !message.isEmpty());
+	}
+
+	<T> T promptForCurrentLayout(Supplier<T> prompt)
+	{
+		long session = editorSession;
+		T result = prompt.get();
+		if (session != editorSession)
+		{
+			setStatus("The menu changed while the dialog was open. Try again.");
+			return null;
+		}
+		return result;
 	}
 
 	void closeColorPicker()
@@ -409,8 +429,8 @@ final class CapeMenuPanel extends PluginPanel
 		List<MenuLayout.Entry> groups = new ArrayList<>();
 		groups.add(MenuLayout.Entry.group("Main menu"));
 		for (MenuLayout.Entry root : layout.entries) { if (root.isGroup()) { groups.add(root); } }
-		Object chosen = JOptionPane.showInputDialog(this, "Move shortcut to:", "Move shortcut",
-			JOptionPane.PLAIN_MESSAGE, null, groups.toArray(), groups.get(0));
+		Object chosen = promptForCurrentLayout(() -> JOptionPane.showInputDialog(this, "Move shortcut to:", "Move shortcut",
+			JOptionPane.PLAIN_MESSAGE, null, groups.toArray(), groups.get(0)));
 		if (chosen == null) { return; }
 		String groupId = chosen == groups.get(0) ? null : ((MenuLayout.Entry) chosen).id;
 		edit(next -> next.move(entry.id, groupId, Integer.MAX_VALUE));

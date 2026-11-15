@@ -47,7 +47,7 @@ final class MenuLayout
 	static MenuLayout defaults()
 	{
 		MenuLayout layout = new MenuLayout();
-		layout.defaultGroup("Poh", "Aldarin", "Brimhaven", "Hosidius", "Pollnivneach", "Prifddinas",
+		layout.defaultGroup("Poh", "Home", "Aldarin", "Brimhaven", "Hosidius", "Pollnivneach", "Prifddinas",
 			"Rellekka", "Rimmington", "Taverley", "Yanille");
 		layout.defaultGroup("Guild", "Crafting Guild", "Farming Guild", "Fishing Guild", "Hunter Guild", "Warrior's Guild");
 		layout.defaultGroup("Skill", "Black chinchompas", "Boat", "Feldip Hills", "Last Boat", "Otto's Grotto", "The Pandemonium");

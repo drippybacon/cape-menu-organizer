@@ -16,9 +16,14 @@ import net.runelite.api.widgets.Widget;
 final class MenuFixture implements Menu
 {
 	private List<MenuEntry> entries = new ArrayList<>();
+	private final int capacity;
+
+	MenuFixture() { this(500); }
+	private MenuFixture(int capacity) { this.capacity = capacity; }
 
 	@Override public MenuEntry createMenuEntry(int index)
 	{
+		if (entries.size() >= capacity) { throw new IllegalStateException("Menu is full"); }
 		MenuEntry entry = new Entry();
 		entries.add(index < 0 ? entries.size() + index + 1 : index, entry);
 		return entry;
@@ -76,7 +81,7 @@ final class MenuFixture implements Menu
 		@Override public Player getPlayer() { return null; }
 		@Override public Actor getActor() { return null; }
 		@Override public Menu getSubMenu() { return sub; }
-		@Override public Menu createSubMenu() { sub = new MenuFixture(); return sub; }
+		@Override public Menu createSubMenu() { sub = new MenuFixture(64); return sub; }
 		@Override public void deleteSubMenu() { sub = null; }
 	}
 }

@@ -21,6 +21,21 @@ import static org.mockito.Mockito.*;
 public class CapeMenuPanelTest
 {
 	@Test
+	public void dialogResultIsDiscardedWhenEditorReloadsDuringThePrompt() throws Exception
+	{
+		SwingUtilities.invokeAndWait(() ->
+		{
+			CapeMenuPanel panel = new CapeMenuPanel(new LayoutCodec(new Gson()), mock(ColorPickerManager.class));
+			panel.showLayout(new MenuLayout(), List.of("Home"), "", true, value -> {}, () -> {});
+			assertEquals("unchanged", panel.promptForCurrentLayout(() -> "unchanged"));
+			assertNull(panel.promptForCurrentLayout(() ->
+			{
+				panel.showLayout(new MenuLayout(), List.of("Home"), "", true, value -> {}, () -> {});
+				return "stale result";
+			}));
+		});
+	}
+	@Test
 	public void nativePickerSavesSelectedEntryThroughOriginalEditorSession() throws Exception
 	{
 		SwingUtilities.invokeAndWait(() ->

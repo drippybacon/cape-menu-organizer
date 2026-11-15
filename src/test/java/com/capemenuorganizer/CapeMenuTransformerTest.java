@@ -10,6 +10,29 @@ import static org.junit.Assert.*;
 
 public class CapeMenuTransformerTest
 {
+	@Test
+	public void fullSubmenuIsAllowedButOverCapacityFallsBackBeforeAnyMutation()
+	{
+		for (int children : new int[]{64, 65})
+		{
+			MenuFixture menu = fixture("Teleports");
+			MenuEntry[] before = menu.getMenuEntries();
+			MenuLayout layout = new MenuLayout();
+			String group = layout.addGroup("Large group").id;
+			for (int i = 0; i < children; i++) { layout.addTeleport(group, "Home"); }
+			CapeMenuTransformer.Result result = transformer.transform(menu, layout, inventory);
+			if (children == 64)
+			{
+				assertTrue(result.changed);
+				assertEquals(64, named(menu, "Large group").getSubMenu().getMenuEntries().length);
+			}
+			else
+			{
+				assertFalse(result.changed);
+				assertArrayEquals(before, menu.getMenuEntries());
+			}
+		}
+	}
 	private final CapeMenuTransformer transformer = new CapeMenuTransformer();
 	private final CapeContext inventory = new CapeContext("inventory", 100, 3);
 	private final CapeContext worn = new CapeContext("worn", 100, 3);

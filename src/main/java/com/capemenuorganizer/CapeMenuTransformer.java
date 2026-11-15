@@ -19,6 +19,7 @@ final class CapeMenuTransformer
 {
 	private static final Set<String> GROUP_NAMES = Set.of("teleports", "guild teleports", "skilling areas", "poh portals");
 	private static final Set<String> ROOT_TELEPORTS = Set.of("home", "crafting guild");
+	private static final int MAX_SUBMENU_ENTRIES = 64;
 
 	static final class Result
 	{
@@ -136,10 +137,19 @@ final class CapeMenuTransformer
 			if (entry.isGroup())
 			{
 				int childCount = 0;
+				int directChildren = 0;
 				for (MenuLayout.Entry child : entry.children)
 				{
 					Action action = actions.get(CapeActionNames.key(child.destination));
-					if (action != null) { childCount += action.entryCount(); }
+					if (action != null)
+					{
+						directChildren++;
+						childCount += action.entryCount();
+					}
+				}
+				if (directChildren > MAX_SUBMENU_ENTRIES)
+				{
+					return unchanged("A group exceeds 64 actions; original menu retained. Split it into smaller groups.");
 				}
 				if (childCount > 0) { totalEntries += 1 + childCount; }
 			}
