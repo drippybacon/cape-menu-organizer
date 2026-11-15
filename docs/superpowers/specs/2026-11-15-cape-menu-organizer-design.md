@@ -53,3 +53,8 @@ Regular max cape only. No diary cape, combat cape combinations, arbitrary item s
 ## Verification
 
 Unit tests cover occurrence independence, defaults, config compatibility/migration, colors, native metadata, inventory/worn context detection, unified utility shortcuts/submenu references, original masks, no fallback menu, profile/lifecycle state and capacity limits. Render sidebar offscreen at225px. Review code without interacting with RuneScape. The user verifies all real actions and destination correctness in both contexts; a build or startup is not an in-game pass.
+
+### Copy and presentation refinements
+Each editor has a Copy to Shift/Normal action. Confirmation replaces only the other layout with an independent full copy (groups, order, colors and masks); stale/profile-switched confirmations are rejected. Original-menu visibility has a distinct bold orange heading separated from editing controls and closely grouped with its checkboxes. Custom group submenu targets inherit the current native cape target for the same Max cape header as native groups.
+
+The navigation icon uses the regular Max cape item sprite after asynchronous loading. Show sidebar (default on) controls only editor visibility; hiding it leaves cape menus enabled and cancels open color editing. Profile changes update visibility. Late sprite callbacks are ignored after shutdown/restart.

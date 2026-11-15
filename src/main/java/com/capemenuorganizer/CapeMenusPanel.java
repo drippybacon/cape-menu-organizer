@@ -33,11 +33,22 @@ final class CapeMenusPanel extends PluginPanel
 	void showLayouts(MenuLayouts menus, List<String> catalog, Map<String, String> capeActions,
 		String message, boolean editable, BiConsumer<Boolean, MenuLayout> save, Consumer<Boolean> reset)
 	{
+		showLayouts(menus, catalog, capeActions, message, editable, save, reset, fromShift ->
+		{
+			if (menus != null) { save.accept(!fromShift, codec.copy(menus.forShift(fromShift))); }
+		});
+	}
+
+	void showLayouts(MenuLayouts menus, List<String> catalog, Map<String, String> capeActions,
+		String message, boolean editable, BiConsumer<Boolean, MenuLayout> save, Consumer<Boolean> reset, Consumer<Boolean> copy)
+	{
 		MenuLayouts displayed = menus == null ? codec.loadMenus(null, null) : menus;
 		normal.showLayout(displayed.normal, catalog, capeActions, message, editable,
 			value -> save.accept(false, value), () -> reset.accept(false));
 		shift.showLayout(displayed.shift, catalog, capeActions, message, editable,
 			value -> save.accept(true, value), () -> reset.accept(true));
+		normal.setCopyAction("Shift", editable, () -> copy.accept(false));
+		shift.setCopyAction("Normal", editable, () -> copy.accept(true));
 	}
 
 	void closeColorPicker()

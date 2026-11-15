@@ -283,7 +283,7 @@ final class CapeMenuTransformer
 
 	private static MenuEntry addGroup(Menu menu, String name, List<Action> actions, List<Integer> colors)
 	{
-		MenuEntry parent = menu.createMenuEntry(-1).setOption(name).setTarget("").setType(MenuAction.RUNELITE);
+		MenuEntry parent = menu.createMenuEntry(-1).setOption(name).setTarget(actions.get(0).target).setType(MenuAction.RUNELITE);
 		Menu sub = parent.createSubMenu();
 		for (int i = actions.size() - 1; i >= 0; i--)
 		{

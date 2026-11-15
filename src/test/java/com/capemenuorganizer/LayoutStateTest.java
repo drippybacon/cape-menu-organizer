@@ -8,6 +8,30 @@ import static org.junit.Assert.*;
 public class LayoutStateTest
 {
 	@Test
+	public void copyingEitherDirectionPreservesAllSettingsWithoutSharingMutableEntries()
+	{
+		LayoutCodec codec = new LayoutCodec(new Gson());
+		for (boolean fromShift : new boolean[]{false, true})
+		{
+			MenuLayout source = new MenuLayout();
+			source.addTeleport(source.addGroup("Favorites").id, "Home").color = 0xff00ff;
+			source.hiddenActions.add("features");
+			MenuLayout target = new MenuLayout();
+			target.addTeleport(null, "Farming Guild");
+			LayoutState state = new LayoutState(codec);
+			state.reload(1, null, codec.encodeMenus(new MenuLayouts(fromShift ? target : source, fromShift ? source : target)));
+			LayoutState.Snapshot before = state.current();
+			MenuLayouts copied = codec.loadMenus(null, state.prepareCopy(before, 1, fromShift));
+			assertEquals(codec.encode(source), codec.encode(copied.normal));
+			assertEquals(codec.encode(source), codec.encode(copied.shift));
+			copied.shift.entries.get(0).children.get(0).color = null;
+			assertEquals(Integer.valueOf(0xff00ff), copied.normal.entries.get(0).children.get(0).color);
+			state.reload(2, null, null);
+			try { state.prepareCopy(before, 2, fromShift); fail("Stale copy must be rejected"); }
+			catch (IllegalArgumentException expected) { }
+		}
+	}
+	@Test
 	public void corruptPairedMenusDoNotReimportLegacyAndExplicitResetRestoresBoth()
 	{
 		LayoutCodec codec = new LayoutCodec(new Gson());

@@ -33,6 +33,7 @@ public class CapeMenuTransformerTest
 		assertSame(crafting, menu.getMenuEntries()[menu.getMenuEntries().length - 1]);
 		assertNull(named(menu, "Teleports"));
 		assertEquals("Home", names(named(menu, "Favorites").getSubMenu()));
+		assertEquals("<col=ff9040>Max cape</col>", named(menu, "Favorites").getTarget());
 		assertSame(swap, named(menu, "Swap left-click"));
 		assertSame(sub, swap.getSubMenu());
 		assertEquals(131074, named(menu, "Home").getIdentifier());

@@ -29,6 +29,8 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreePath;
 import net.runelite.client.ui.PluginPanel;
+import net.runelite.client.ui.ColorScheme;
+import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.components.colorpicker.ColorPickerManager;
 import net.runelite.client.ui.components.colorpicker.RuneliteColorPicker;
 
@@ -44,6 +46,8 @@ final class CapeMenuPanel extends PluginPanel
 	private final JPanel controls = new JPanel(new GridLayout(0, 2, 4, 4));
 	private final JPanel visibility = new JPanel();
 	private final JPanel capeVisibility = new JPanel();
+	private final JButton copyButton = new JButton();
+	private Runnable copy = () -> {};
 	private final List<JButton> editButtons = new ArrayList<>();
 	private MenuLayout layout = new MenuLayout();
 	private Consumer<MenuLayout> save = value -> {};
@@ -157,10 +161,27 @@ final class CapeMenuPanel extends PluginPanel
 		});
 		controls.add(resetButton);
 		content.add(controls);
+		copyButton.setMargin(new Insets(4, 3, 4, 3));
+		copyButton.addActionListener(event ->
+		{
+			Runnable copySession = copy;
+			if (JOptionPane.showConfirmDialog(this, "Replace the other menu with a copy of this one?",
+				"Copy menu", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) { copySession.run(); }
+		});
+		content.add(copyButton);
 		content.add(text("Select Main menu or a group, then add actions."));
 		visibility.setLayout(new BoxLayout(visibility, BoxLayout.Y_AXIS));
-		content.add(new JLabel("Show original menus"));
-		content.add(text("Checked entries stay visible. Custom shortcuts are separate."));
+		JLabel originalsHeading = new JLabel("Show original menus");
+		originalsHeading.setFont(FontManager.getDefaultBoldFont());
+		originalsHeading.setForeground(ColorScheme.BRAND_ORANGE);
+		originalsHeading.setToolTipText("Custom shortcuts remain available when original menus are hidden.");
+		originalsHeading.setBorder(BorderFactory.createEmptyBorder(18, 0, 0, 0));
+		content.add(originalsHeading);
+		JTextArea visibilityHelp = text("Checked = visible.");
+		visibilityHelp.setBorder(BorderFactory.createEmptyBorder(4, 0, 4, 0));
+		visibilityHelp.setRows(1);
+		visibilityHelp.setMaximumSize(new Dimension(Integer.MAX_VALUE, visibilityHelp.getPreferredSize().height));
+		content.add(visibilityHelp);
 		content.add(new JLabel("Teleports"));
 		content.add(visibility);
 		content.add(new JLabel("Cape actions"));
@@ -175,6 +196,15 @@ final class CapeMenuPanel extends PluginPanel
 			}
 		}
 		add(content, BorderLayout.NORTH);
+	}
+
+	void setCopyAction(String target, boolean enabled, Runnable onCopy)
+	{
+		copyButton.setText("Copy to " + target);
+		copyButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, copyButton.getPreferredSize().height));
+		copyButton.setToolTipText("Replace " + target + " with this menu, including colors and visibility.");
+		copyButton.setEnabled(enabled);
+		copy = onCopy;
 	}
 
 	void showLayout(MenuLayout value, List<String> catalog, String message, boolean allowEdits,

@@ -29,7 +29,7 @@ There is no automatic Other teleports menu. Only actions assigned to your layout
 
 ## Using the editor
 
-1. Enable Cape Menu Organizer and open its cape icon in the RuneLite sidebar.
+1. Enable Cape Menu Organizer and open its Max cape icon in the RuneLite sidebar. Turn off Show sidebar in the plugin settings to hide the editor while keeping custom menus active.
 2. Choose the Normal or Shift tab to edit that menu. Both initially copy your existing layout, including colors and visibility; subsequent edits are independent. The selected tab does not control which menu appears in game: holding Shift does.
 3. The action picker is populated immediately with known cape actions and your saved references. The full standard list is available from startup, including Teleport Boat (Pandemonium). Editor choices do not invent game actions: custom shortcuts appear only when the corresponding action exists in the current native cape menu. Executable action data is never saved.
 4. Select Main menu for a direct shortcut, or create/select a custom group.
@@ -37,9 +37,10 @@ There is no automatic Other teleports menu. Only actions assigned to your layout
 6. Repeat to create independent copies. Move up/down controls order entries; Move to moves shortcuts between groups and the main menu. Rename changes custom group names. Remove deletes only the selected occurrence (or a selected group and its shortcuts).
 7. Use Color to open RuneLite's normal color picker for the selected group or shortcut. Close the picker to save the selected text color, or use Reset color to restore the default.
 8. The Teleports checkboxes under Show original menus show or hide native teleport menus independently in inventory/equipment. They start hidden.
-9. The Cape actions checkboxes show or hide native Spellbook/Features menus and individual entries. They start visible. Hiding a native original does not disable a separately added custom shortcut. A complete submenu reference respects the selected child visibility; direct shortcuts remain independent.
+9. Use Copy to Shift or Copy to Normal to replace the other tab with a full independent copy, including groups, colors and visibility. Confirm before overwriting.
+10. The Cape actions checkboxes show or hide native Spellbook/Features menus and individual entries. They start visible. Hiding a native original does not disable a separately added custom shortcut. A complete submenu reference respects the selected child visibility; direct shortcuts remain independent.
 
-Custom groups cannot contain other custom groups. A complete native Spellbook or Features submenu may be placed inside a custom group, creating an additional native submenu level. Empty/unavailable custom groups and references do not appear in the game menu.
+Custom submenus use the current native cape target as their title, matching the original Max cape submenu header. Custom groups cannot contain other custom groups. A complete native Spellbook or Features submenu may be placed inside a custom group, creating an additional native submenu level. Empty/unavailable custom groups and references do not appear in the game menu.
 
 Your active native default entry stays at the top; custom entries follow in layout order. The active default submenu is retained intact even if its visibility box is off, to protect the current click setting. Shift-right-click uses the complete Shift layout, including custom groups and visibility settings, while retaining RuneLite's Swap left-click and Swap shift-click controls. Existing left-click and Shift-left-click choices remain controlled by Menu Entry Swapper.
 
@@ -73,6 +74,7 @@ A passing build verifies local logic, not actual game actions. The player must c
 - Test Feldip Hills in both contexts and confirm it reaches the intended location. An existing Carnivorous chinchompas shortcut should now show Feldip Hills.
 - Test every assigned action, normal restrictions/confirmations, independent duplicate colors, removal/reordering, and persistence across restart/profile changes.
 - With native Home left-click and a custom root Home shortcut, confirm only native Home appears at the top. Grouped Home copies must remain. With another native default, the custom root Home must return; duplicate root Crafting Guild should similarly be omitted when it is the native default.
+- Copy Normal to Shift and Shift to Normal; check all settings transfer, the source remains unchanged, and subsequent edits remain independent. Canceling the copy must leave both menus unchanged.
 - Give Normal and Shift different group names, colors and visibility settings. Right-click both inventory and worn cape with and without Shift: each should use its corresponding layout, regardless of the selected editor tab. Check that changing/resetting one tab leaves the other unchanged, including after restart.
 - With Crafting Guild as the Shift action and Home configured at the Shift root, Shift-right-click should show Home once below the native default, plus the configured Shift groups and RuneLite swap controls. Shift-left-click must still perform Crafting Guild.
 - Confirm existing clicks and Shift-right-click configuration, normal non-teleport item actions, unrelated items/bank menus, cape slot changes, disable/reset.

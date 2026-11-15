@@ -2,28 +2,26 @@ package com.capemenuorganizer;
 
 import com.google.gson.Gson;
 import com.google.inject.Provides;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.image.BufferedImage;
 import javax.inject.Inject;
 import javax.swing.SwingUtilities;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.KeyCode;
 import net.runelite.api.Menu;
+import net.runelite.api.gameval.ItemID;
 import net.runelite.api.events.MenuOpened;
 import net.runelite.api.events.PostMenuSort;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.events.ProfileChanged;
+import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.ui.components.colorpicker.ColorPickerManager;
+import net.runelite.client.util.AsyncBufferedImage;
 
 @Slf4j
 @PluginDescriptor(name = "Cape Menu Organizer", description = "Organize max cape teleport menus", tags = {"cape", "teleport", "menu"})
@@ -34,6 +32,8 @@ public class CapeMenuOrganizerPlugin extends Plugin
 	@Inject private ClientToolbar toolbar;
 	@Inject private Gson gson;
 	@Inject private ColorPickerManager colorPickerManager;
+	@Inject private ItemManager itemManager;
+	@Inject private CapeMenuOrganizerConfig config;
 	private final CapeMenuTransformer transformer = new CapeMenuTransformer();
 	private volatile LayoutState state;
 	private volatile CapeMenusPanel panel;
@@ -49,12 +49,17 @@ public class CapeMenuOrganizerPlugin extends Plugin
 		running = true;
 		reload();
 		LayoutState activeState = state;
+		AsyncBufferedImage capeIcon = itemManager.getImage(ItemID.SKILLCAPE_MAX);
 		onEdt(() ->
 		{
 			if (!running || state != activeState) { return; }
 			panel = new CapeMenusPanel(codec, colorPickerManager);
-			navigation = NavigationButton.builder().tooltip("Cape Menu Organizer").icon(icon()).panel(panel).priority(7).build();
-			toolbar.addNavigation(navigation);
+			capeIcon.onLoaded(() -> onEdt(() ->
+			{
+				if (!running || state != activeState) { return; }
+				navigation = NavigationButton.builder().tooltip("Cape Menu Organizer").icon(capeIcon).panel(panel).priority(7).build();
+				updateNavigation();
+			}));
 			refresh("");
 		});
 	}
@@ -115,6 +120,10 @@ public class CapeMenuOrganizerPlugin extends Plugin
 	@Subscribe
 	public void onConfigChanged(ConfigChanged event)
 	{
+		if (CapeMenuOrganizerConfig.GROUP.equals(event.getGroup()) && "showSidebar".equals(event.getKey()))
+		{
+			updateNavigation();
+		}
 		if (CapeMenuOrganizerConfig.GROUP.equals(event.getGroup())
 			&& ("layout".equals(event.getKey()) || "menus".equals(event.getKey()))) { reload(); }
 	}
@@ -135,6 +144,21 @@ public class CapeMenuOrganizerPlugin extends Plugin
 				configManager.getConfiguration(CapeMenuOrganizerConfig.GROUP, "menus"));
 		}
 		refresh("");
+		updateNavigation();
+	}
+
+	private void updateNavigation()
+	{
+		onEdt(() ->
+		{
+			if (!running || navigation == null) { return; }
+			if (config.showSidebar()) { toolbar.addNavigation(navigation); }
+			else
+			{
+				if (panel != null) { panel.closeColorPicker(); }
+				toolbar.removeNavigation(navigation);
+			}
+		});
 	}
 
 	private void refresh(String message)
@@ -150,8 +174,24 @@ public class CapeMenuOrganizerPlugin extends Plugin
 				active.catalog(snapshot), active.capeActions(snapshot),
 				snapshot.error == null ? message : snapshot.error, snapshot.menus != null,
 				(shift, value) -> save(active, snapshot, value, false, shift),
-				shift -> save(active, snapshot, MenuLayout.defaults(), true, shift));
+				shift -> save(active, snapshot, MenuLayout.defaults(), true, shift),
+				fromShift -> copy(active, snapshot, fromShift));
 		});
+	}
+
+	private void copy(LayoutState active, LayoutState.Snapshot expected, boolean fromShift)
+	{
+		try
+		{
+			synchronized (configManager)
+			{
+				if (!running || state != active) { return; }
+				String json = active.prepareCopy(expected, configManager.getProfile().getId(), fromShift);
+				configManager.setConfiguration(CapeMenuOrganizerConfig.GROUP, "menus", json);
+				reload();
+			}
+		}
+		catch (IllegalArgumentException ex) { refresh(ex.getMessage()); }
 	}
 
 	private void save(LayoutState active, LayoutState.Snapshot expected, MenuLayout value, boolean reset, boolean shift)
@@ -177,20 +217,6 @@ public class CapeMenuOrganizerPlugin extends Plugin
 	{
 		if (SwingUtilities.isEventDispatchThread()) { action.run(); }
 		else { SwingUtilities.invokeLater(action); }
-	}
-
-	private static BufferedImage icon()
-	{
-		BufferedImage image = new BufferedImage(24, 24, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D graphics = image.createGraphics();
-		graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		graphics.setColor(new Color(202, 166, 81));
-		graphics.fillPolygon(new int[]{8, 16, 21, 3}, new int[]{3, 3, 21, 21}, 4);
-		graphics.setColor(new Color(54, 44, 65));
-		graphics.setStroke(new BasicStroke(2));
-		for (int y = 10; y <= 18; y += 4) { graphics.drawLine(8, y, 16, y); }
-		graphics.dispose();
-		return image;
 	}
 
 	@Provides

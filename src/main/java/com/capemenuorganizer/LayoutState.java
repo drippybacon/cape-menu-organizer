@@ -65,6 +65,12 @@ final class LayoutState
 		return current;
 	}
 
+	synchronized String prepareCopy(Snapshot expected, long activeProfileId, boolean fromShift)
+	{
+		if (expected.menus == null) { throw new IllegalArgumentException("Reset unreadable menus before copying."); }
+		return prepareSave(expected, expected.menus.forShift(fromShift), activeProfileId, false, !fromShift);
+	}
+
 	synchronized String prepareSave(Snapshot expected, MenuLayout value, long activeProfileId, boolean reset, boolean shift)
 	{
 		if (current != expected || expected.profileId != activeProfileId)
