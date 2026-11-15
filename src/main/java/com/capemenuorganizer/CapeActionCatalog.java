@@ -22,7 +22,7 @@ final class CapeActionCatalog
 		{
 			actions.put("spellbook/" + CapeMenuTransformer.key(name), "Spellbook / " + name);
 		}
-		for (String name : List.of("Search", "Ring of Life", "Commune", "Stamina Boost", "Rename boat"))
+		for (String name : List.of("Search", "Ring of Life", "Commune", "Stamina Boost", "Rename boat", "Teleport Boat (Pandemonium)"))
 		{
 			actions.put("features/" + CapeMenuTransformer.key(name), "Features / " + name);
 		}

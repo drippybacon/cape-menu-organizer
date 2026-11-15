@@ -31,13 +31,13 @@ There is no automatic Other teleports menu. Only actions assigned to your layout
 
 1. Enable Cape Menu Organizer and open its cape icon in the RuneLite sidebar.
 2. Choose the Normal or Shift tab to edit that menu. Both initially copy your existing layout, including colors and visibility; subsequent edits are independent. The selected tab does not control which menu appears in game: holding Shift does.
-3. The action picker is populated immediately with known cape actions and your saved references. Hovering the cape automatically learns additional current options; right-clicking also refreshes them. Editor choices do not invent game actions: custom shortcuts appear only when the corresponding action exists in the current native cape menu. Executable action data is never saved.
+3. The action picker is populated immediately with known cape actions and your saved references. The full standard list is available from startup, including Teleport Boat (Pandemonium). Editor choices do not invent game actions: custom shortcuts appear only when the corresponding action exists in the current native cape menu. Executable action data is never saved.
 4. Select Main menu for a direct shortcut, or create/select a custom group.
 5. Choose a teleport, a qualified action such as Spellbook / Ancient, or a complete Spellbook/Features submenu, then click Add action.
 6. Repeat to create independent copies. Move up/down controls order entries; Move to moves shortcuts between groups and the main menu. Rename changes custom group names. Remove deletes only the selected occurrence (or a selected group and its shortcuts).
 7. Use Color to open RuneLite's normal color picker for the selected group or shortcut. Close the picker to save the selected text color, or use Reset color to restore the default.
-8. Original teleport submenus controls show or hide native teleport menus independently in inventory/equipment. They start hidden.
-9. Original cape action menus controls show or hide native Spellbook/Features menus and individual entries. They start visible. Hiding a native original does not disable a separately added custom shortcut. A complete submenu reference respects the selected child visibility; direct shortcuts remain independent.
+8. The Teleports checkboxes under Show original menus show or hide native teleport menus independently in inventory/equipment. They start hidden.
+9. The Cape actions checkboxes show or hide native Spellbook/Features menus and individual entries. They start visible. Hiding a native original does not disable a separately added custom shortcut. A complete submenu reference respects the selected child visibility; direct shortcuts remain independent.
 
 Custom groups cannot contain other custom groups. A complete native Spellbook or Features submenu may be placed inside a custom group, creating an additional native submenu level. Empty/unavailable custom groups and references do not appear in the game menu.
 
@@ -65,7 +65,7 @@ For Jagex Account login, follow RuneLite's [Using Jagex Accounts](https://github
 A passing build verifies local logic, not actual game actions. The player must check:
 
 - Confirmed reset/new profile yields the Poh, Guild and Skill defaults above, and existing edited profiles remain unchanged.
-- Immediately after plugin/client startup, the action picker contains known choices without first opening a cape menu. Hovering the cape refreshes extra options without changing its current native click behavior.
+- Immediately after plugin/client startup, the action picker contains known choices without first opening a cape menu.
 - The Color button opens RuneLite's standard color picker; closing saves the selected entry's RGB text color. A profile/layout change while it is open must not save through a different editor session.
 - Inventory and worn cape custom groups have matching order; no automatic Other teleports group appears.
 - Add Spellbook and Features submenus inside a custom group, plus Ancient and Stamina Boost as individual shortcuts alongside a teleport. Test each in both contexts.

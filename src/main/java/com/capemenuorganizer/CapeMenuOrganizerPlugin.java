@@ -55,7 +55,7 @@ public class CapeMenuOrganizerPlugin extends Plugin
 			panel = new CapeMenusPanel(codec, colorPickerManager);
 			navigation = NavigationButton.builder().tooltip("Cape Menu Organizer").icon(icon()).panel(panel).priority(7).build();
 			toolbar.addNavigation(navigation);
-			refresh("Cape actions loaded. Hover the cape to refresh its current options.");
+			refresh("");
 		});
 	}
 
@@ -103,7 +103,7 @@ public class CapeMenuOrganizerPlugin extends Plugin
 				: transformer.discover(menu, selected, context);
 			boolean learned = active.observe(snapshot, result.destinations);
 			learned |= active.observeActions(snapshot, result.capeActions);
-			if (applyLayout || learned) { refresh(result.status); }
+			if (applyLayout || learned) { refresh(applyLayout && !result.changed ? result.status : ""); }
 		}
 		catch (IllegalArgumentException ex)
 		{
@@ -134,7 +134,7 @@ public class CapeMenuOrganizerPlugin extends Plugin
 			active.reload(configManager.getProfile().getId(), configManager.getConfiguration(CapeMenuOrganizerConfig.GROUP, "layout"),
 				configManager.getConfiguration(CapeMenuOrganizerConfig.GROUP, "menus"));
 		}
-		refresh("Cape actions loaded. Hover the cape to refresh its current options.");
+		refresh("");
 	}
 
 	private void refresh(String message)

@@ -79,6 +79,7 @@ public class LayoutStateTest
 		assertTrue(choices.contains("Spellbook"));
 		assertTrue(choices.contains("Spellbook / Ancient"));
 		assertTrue(choices.contains("Features / Stamina Boost"));
+		assertTrue(choices.contains("Features / Teleport Boat (Pandemonium)"));
 		assertEquals("Spellbook / Ancient", state.capeActions(state.current()).get("spellbook/ancient"));
 	}
 	@Test

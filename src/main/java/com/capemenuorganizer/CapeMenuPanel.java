@@ -60,7 +60,7 @@ final class CapeMenuPanel extends PluginPanel
 		JPanel content = new JPanel();
 		content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 		content.add(new JLabel("Cape Menu Organizer"));
-		content.add(text("Shared inventory and worn layout. Changes save automatically. Actions are ready to edit; hover your cape to refresh its current options."));
+		content.add(text("Applies to inventory and worn cape. Saves automatically."));
 		JScrollPane scroll = new JScrollPane(tree);
 		scroll.setPreferredSize(new Dimension(200, 260));
 		scroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 360));
@@ -157,15 +157,15 @@ final class CapeMenuPanel extends PluginPanel
 		});
 		controls.add(resetButton);
 		content.add(controls);
-		content.add(text("Select a group or Main menu, then add any teleport, cape action or native submenu. Each can appear more than once."));
+		content.add(text("Select Main menu or a group, then add actions."));
 		visibility.setLayout(new BoxLayout(visibility, BoxLayout.Y_AXIS));
-		content.add(new JLabel("Original teleport submenus"));
+		content.add(new JLabel("Show original menus"));
+		content.add(text("Checked entries stay visible. Custom shortcuts are separate."));
+		content.add(new JLabel("Teleports"));
 		content.add(visibility);
-		content.add(text("Only assigned actions are added to your layout. Your current left-click and Shift-click remain available."));
-		content.add(new JLabel("Original cape action menus"));
+		content.add(new JLabel("Cape actions"));
 		capeVisibility.setLayout(new BoxLayout(capeVisibility, BoxLayout.Y_AXIS));
 		content.add(capeVisibility);
-		content.add(text("Tick original entries to show them. Custom shortcuts still work when their original menu is hidden."));
 		content.add(status);
 		for (Component child : content.getComponents())
 		{
@@ -230,6 +230,7 @@ final class CapeMenuPanel extends PluginPanel
 			boolean parent = path.indexOf('/') < 0;
 			String group = parent ? path : path.substring(0, path.indexOf('/'));
 			String label = parent ? "Show " + action.getValue() : action.getValue().substring(action.getValue().indexOf(" / ") + 3);
+			if ("features/teleport boat (pandemonium)".equals(path)) { label = "Teleport Boat"; }
 			String display = label.length() > 24 ? "<html><body style='width:140px'>"
 				+ label.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") + "</body></html>" : label;
 			JCheckBox checkbox = new JCheckBox(display, !layout.hiddenActions.contains(path));
@@ -250,7 +251,7 @@ final class CapeMenuPanel extends PluginPanel
 			capeVisibility.add(checkbox);
 		}
 		refreshing = false;
-		status.setText(message);
+		setStatus(message);
 		revalidate();
 		repaint();
 	}
@@ -258,6 +259,7 @@ final class CapeMenuPanel extends PluginPanel
 	void setStatus(String message)
 	{
 		status.setText(message);
+		status.setVisible(message != null && !message.isEmpty());
 	}
 
 	void closeColorPicker()
@@ -281,7 +283,7 @@ final class CapeMenuPanel extends PluginPanel
 		area.setBorder(BorderFactory.createEmptyBorder(6, 0, 8, 0));
 		area.setFocusable(false);
 		area.setColumns(20);
-		area.setRows(Math.max(3, (value.length() + 26) / 27));
+		area.setRows(Math.max(1, (value.length() + 26) / 27));
 		area.setMaximumSize(new Dimension(Integer.MAX_VALUE, area.getPreferredSize().height));
 		return area;
 	}
@@ -310,7 +312,7 @@ final class CapeMenuPanel extends PluginPanel
 		}
 		catch (IllegalArgumentException ex)
 		{
-			status.setText(ex.getMessage());
+			setStatus(ex.getMessage());
 		}
 	}
 
