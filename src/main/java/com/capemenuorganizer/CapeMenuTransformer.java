@@ -24,12 +24,19 @@ final class CapeMenuTransformer
 	{
 		final boolean changed;
 		final List<String> destinations;
+		final Map<String, String> capeActions;
 		final String status;
 
 		Result(boolean changed, List<String> destinations, String status)
 		{
+			this(changed, destinations, Collections.emptyMap(), status);
+		}
+
+		Result(boolean changed, List<String> destinations, Map<String, String> capeActions, String status)
+		{
 			this.changed = changed;
 			this.destinations = destinations;
+			this.capeActions = capeActions;
 			this.status = status;
 		}
 	}
@@ -90,11 +97,13 @@ final class CapeMenuTransformer
 		}
 
 		MenuEntry defaultEntry = original[original.length - 1];
+		CapeActionVisibility utilityVisibility = new CapeActionVisibility(original, context, layout);
 		List<MenuEntry> retained = new ArrayList<>();
 		for (MenuEntry entry : original)
 		{
 			boolean hide = teleportRoots.contains(entry) && (entry.getSubMenu() == null
 				|| layout.hiddenOriginals.contains(context.name + ":" + key(entry.getOption())));
+			hide |= utilityVisibility.hiddenParents.contains(entry);
 			if (!hide || entry == defaultEntry)
 			{
 				retained.add(entry);
@@ -152,6 +161,7 @@ final class CapeMenuTransformer
 		// Menu arrays are reversed. Insert custom entries below the untouched active default.
 		Collections.reverse(customDisplayOrder);
 		retained.addAll(Math.max(0, retained.size() - 1), customDisplayOrder);
+		utilityVisibility.apply();
 		menu.setMenuEntries(retained.toArray(new MenuEntry[0]));
 		List<String> catalog = new ArrayList<>();
 		for (Action action : actions.values())
@@ -159,7 +169,8 @@ final class CapeMenuTransformer
 			catalog.add(action.option);
 		}
 		catalog.sort(String.CASE_INSENSITIVE_ORDER);
-		return new Result(true, catalog, "Layout applied to " + context.name + " cape (" + catalog.size() + " destinations).");
+		return new Result(true, catalog, utilityVisibility.catalog,
+			"Layout applied to " + context.name + " cape (" + catalog.size() + " destinations).");
 	}
 
 	private static Result unchanged(String reason)

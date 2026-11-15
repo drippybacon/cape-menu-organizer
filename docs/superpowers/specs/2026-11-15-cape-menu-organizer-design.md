@@ -32,7 +32,9 @@ Unassigned destinations remain available under a reserved `Other teleports` subm
 
 The editor also lets the player show or hide each original teleport submenu independently in each context. Hiding an original submenu only removes its native presentation; its destinations remain available to custom groups and direct shortcuts. The `Other teleports` fallback ensures unassigned destinations remain reachable even when original teleport submenus are hidden. These visibility controls do not hide non-teleport cape menus such as spellbook changes or features. Original teleport submenus start hidden to give a matching custom layout; the native active default entry is always retained, including if it is a submenu.
 
-The custom right-click teleport section has identical names and order in both contexts. Non-teleport actions such as Wear, Remove, Use, Drop, Examine, spellbook changes and cape features retain their context-appropriate behavior. Existing left-click and Shift-click choices remain functional; this plugin does not change another plugin's settings. An already promoted click destination may also appear in the organized section.
+The custom right-click teleport section has identical names and order in both contexts. Non-teleport actions such as Wear, Remove, Use, Drop and Examine retain their context-appropriate behavior. Existing left-click and Shift-click choices remain functional; this plugin does not change another plugin's settings. An already promoted click destination may also appear in the organized section.
+
+User-requested extension: the sidebar lists observed native Spellbook and Features actions and lets the player hide individual child entries or either entire submenu. These visibility choices are shared across inventory and equipment, start fully visible, and persist without replacing existing layouts. Unrecognized children remain unchanged. Empty parents disappear, except the active native default entry and its submenu are retained. This filtering changes visibility only, never surviving action metadata.
 
 ## Implementation boundaries
 

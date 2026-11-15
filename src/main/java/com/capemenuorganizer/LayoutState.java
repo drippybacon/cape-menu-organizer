@@ -2,6 +2,8 @@ package com.capemenuorganizer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -24,6 +26,7 @@ final class LayoutState
 
 	private final LayoutCodec codec;
 	private final Set<String> catalog = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+	private final Map<String, String> capeActions = new TreeMap<>();
 	private volatile Snapshot current;
 
 	LayoutState(LayoutCodec codec)
@@ -33,7 +36,11 @@ final class LayoutState
 
 	synchronized void reload(long profileId, String json)
 	{
-		if (current == null || current.profileId != profileId) { catalog.clear(); }
+		if (current == null || current.profileId != profileId)
+		{
+			catalog.clear();
+			capeActions.clear();
+		}
 		try
 		{
 			current = new Snapshot(profileId, json == null || json.isEmpty() ? MenuLayout.defaults() : codec.decode(json), null);
@@ -65,6 +72,19 @@ final class LayoutState
 	synchronized boolean observe(Snapshot expected, List<String> destinations)
 	{
 		return expected == current && catalog.addAll(destinations);
+	}
+
+	synchronized void observeActions(Snapshot expected, Map<String, String> observed)
+	{
+		if (expected == current && capeActions.size() + observed.size() <= 100)
+		{
+			capeActions.putAll(observed);
+		}
+	}
+
+	synchronized Map<String, String> capeActions(Snapshot expected)
+	{
+		return current == expected ? new TreeMap<>(capeActions) : new TreeMap<>();
 	}
 
 	synchronized List<String> catalog(Snapshot expected)

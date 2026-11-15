@@ -82,6 +82,7 @@ public class CapeMenuOrganizerPlugin extends Plugin
 		{
 			CapeMenuTransformer.Result result = transformer.transform(menu, snapshot.layout, context);
 			active.observe(snapshot, result.destinations);
+			active.observeActions(snapshot, result.capeActions);
 			refresh(result.status);
 		}
 		catch (IllegalArgumentException ex)
@@ -124,7 +125,8 @@ public class CapeMenuOrganizerPlugin extends Plugin
 			CapeMenuPanel editor = panel;
 			if (!running || editor == null || state != active || active.current() != snapshot) { return; }
 			editor.showLayout(snapshot.layout == null ? MenuLayout.defaults() : snapshot.layout,
-				active.catalog(snapshot), snapshot.error == null ? message : snapshot.error, snapshot.layout != null,
+				active.catalog(snapshot), active.capeActions(snapshot),
+				snapshot.error == null ? message : snapshot.error, snapshot.layout != null,
 				value -> save(active, snapshot, value, false), () -> save(active, snapshot, MenuLayout.defaults(), true));
 		});
 	}

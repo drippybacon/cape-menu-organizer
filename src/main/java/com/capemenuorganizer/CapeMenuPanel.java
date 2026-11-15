@@ -7,7 +7,10 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.function.Consumer;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -36,6 +39,7 @@ final class CapeMenuPanel extends PluginPanel
 	private final JTextArea status = text("");
 	private final JPanel controls = new JPanel(new GridLayout(0, 2, 4, 4));
 	private final JPanel visibility = new JPanel();
+	private final JPanel capeVisibility = new JPanel();
 	private final List<JButton> editButtons = new ArrayList<>();
 	private MenuLayout layout = new MenuLayout();
 	private Consumer<MenuLayout> save = value -> {};
@@ -138,6 +142,10 @@ final class CapeMenuPanel extends PluginPanel
 		content.add(new JLabel("Original teleport submenus"));
 		content.add(visibility);
 		content.add(text("Unassigned destinations stay under Other teleports. Your current left-click and Shift-click remain available."));
+		content.add(new JLabel("Other cape actions"));
+		capeVisibility.setLayout(new BoxLayout(capeVisibility, BoxLayout.Y_AXIS));
+		content.add(capeVisibility);
+		content.add(text("Tick the actions you want to show. Open your cape menu to load individual Spellbook and Features options."));
 		content.add(status);
 		for (Component child : content.getComponents())
 		{
@@ -151,6 +159,12 @@ final class CapeMenuPanel extends PluginPanel
 
 	void showLayout(MenuLayout value, List<String> catalog, String message, boolean allowEdits,
 		Consumer<MenuLayout> onSave, Runnable onReset)
+	{
+		showLayout(value, catalog, Collections.emptyMap(), message, allowEdits, onSave, onReset);
+	}
+
+	void showLayout(MenuLayout value, List<String> catalog, Map<String, String> capeActions,
+		String message, boolean allowEdits, Consumer<MenuLayout> onSave, Runnable onReset)
 	{
 		layout = codec.copy(value);
 		save = onSave;
@@ -186,6 +200,35 @@ final class CapeMenuPanel extends PluginPanel
 			});
 			visibility.add(checkbox);
 		});
+		capeVisibility.removeAll();
+		Map<String, String> knownActions = new TreeMap<>(capeActions);
+		knownActions.put("spellbook", "Spellbook");
+		knownActions.put("features", "Features");
+		for (Map.Entry<String, String> action : knownActions.entrySet())
+		{
+			String path = action.getKey();
+			boolean parent = path.indexOf('/') < 0;
+			String group = parent ? path : path.substring(0, path.indexOf('/'));
+			String label = parent ? "Show " + action.getValue() : action.getValue().substring(action.getValue().indexOf(" / ") + 3);
+			String display = label.length() > 24 ? "<html><body style='width:140px'>"
+				+ label.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") + "</body></html>" : label;
+			JCheckBox checkbox = new JCheckBox(display, !layout.hiddenActions.contains(path));
+			checkbox.setBorder(BorderFactory.createEmptyBorder(2, parent ? 0 : 14, 2, 0));
+			checkbox.setToolTipText(action.getValue());
+			checkbox.setEnabled(allowEdits && (parent || !layout.hiddenActions.contains(group)));
+			checkbox.addActionListener(event ->
+			{
+				if (!refreshing)
+				{
+					edit(next ->
+					{
+						if (checkbox.isSelected()) { next.hiddenActions.remove(path); }
+						else { next.hiddenActions.add(path); }
+					});
+				}
+			});
+			capeVisibility.add(checkbox);
+		}
 		refreshing = false;
 		status.setText(message);
 		revalidate();

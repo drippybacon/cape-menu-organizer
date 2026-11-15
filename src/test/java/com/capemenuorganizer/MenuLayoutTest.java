@@ -8,6 +8,14 @@ import static org.junit.Assert.*;
 public class MenuLayoutTest
 {
 	@Test
+	public void existingSavedLayoutLoadsWithAllUtilityActionsVisible()
+	{
+		MenuLayout layout = new LayoutCodec(new Gson()).decode("{\"version\":1,\"entries\":[],\"hiddenOriginals\":[]}");
+		assertTrue(layout.hiddenActions.isEmpty());
+		layout.hiddenActions.add("unrelated/action");
+		assertRejected(layout::validate);
+	}
+	@Test
 	public void duplicatesAreIndependentAndMovesPreserveIdentity()
 	{
 		MenuLayout layout = new MenuLayout();
@@ -30,11 +38,13 @@ public class MenuLayoutTest
 		original.addTeleport(original.addGroup("Clues").id, "Crafting Guild");
 		original.setColor(original.entries.get(0).children.get(0).id, 0x00ff00);
 		original.hiddenOriginals.add("inventory:teleports");
+		original.hiddenActions.add("spellbook/check");
 		LayoutCodec codec = new LayoutCodec(new Gson());
 		MenuLayout restored = codec.decode(codec.encode(original));
 		assertEquals("Crafting Guild", restored.entries.get(0).children.get(0).destination);
 		assertEquals(Integer.valueOf(0x00ff00), restored.entries.get(0).children.get(0).color);
 		assertTrue(restored.hiddenOriginals.contains("inventory:teleports"));
+		assertTrue(restored.hiddenActions.contains("spellbook/check"));
 		restored.entries.clear();
 		assertEquals(1, original.entries.size());
 	}

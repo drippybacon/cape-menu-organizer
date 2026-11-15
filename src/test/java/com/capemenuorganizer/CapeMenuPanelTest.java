@@ -4,14 +4,48 @@ import com.google.gson.Gson;
 import java.awt.Component;
 import java.awt.Container;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.SwingUtilities;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class CapeMenuPanelTest
 {
+	@Test
+	public void individualCapeActionCheckboxSavesAndCanBeRestored() throws Exception
+	{
+		SwingUtilities.invokeAndWait(() ->
+		{
+			AtomicReference<MenuLayout> saved = new AtomicReference<>();
+			CapeMenuPanel panel = new CapeMenuPanel(new LayoutCodec(new Gson()));
+			panel.showLayout(new MenuLayout(), List.of("Home"), Map.of("spellbook", "Spellbook",
+				"spellbook/ancient", "Spellbook / Ancient"), "Ready", true, saved::set, () -> {});
+			JCheckBox ancient = checkbox(panel, "Ancient");
+			assertNotNull(ancient);
+			assertTrue(ancient.isSelected());
+			ancient.doClick();
+			assertTrue(saved.get().hiddenActions.contains("spellbook/ancient"));
+			ancient.doClick();
+			assertFalse(saved.get().hiddenActions.contains("spellbook/ancient"));
+		});
+	}
+
+	private static JCheckBox checkbox(Container root, String text)
+	{
+		for (Component child : root.getComponents())
+		{
+			if (child instanceof JCheckBox && text.equals(((JCheckBox) child).getText())) { return (JCheckBox) child; }
+			if (child instanceof Container)
+			{
+				JCheckBox nested = checkbox((Container) child, text);
+				if (nested != null) { return nested; }
+			}
+		}
+		return null;
+	}
 	@Test
 	public void addingDuplicateShortcutsSavesIndependentCopiesAndUpdatesTree() throws Exception
 	{

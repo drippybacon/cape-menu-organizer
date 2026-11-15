@@ -10,8 +10,9 @@ Create a shared custom max cape teleport menu for inventory and equipment.
 - Reorder, move and remove individual shortcuts without affecting other copies.
 - Choose an optional color for each group or shortcut; duplicate destinations can have different colors.
 - Show or hide each original teleport submenu independently for inventory and equipment.
+- Selectively hide individual Spellbook or Features options, or either whole submenu, in both contexts.
 - Keep unassigned destinations accessible under **Other teleports**.
-- Preserve existing left-click and Shift-click choices and non-teleport cape actions.
+- Preserve existing left-click and Shift-click choices; other cape actions stay visible unless you choose to hide them.
 - Save the layout in the active RuneLite configuration profile.
 
 Version one supports the regular max cape and its worn item representation. Combat max cape combinations and the achievement diary cape are not supported.
@@ -25,6 +26,7 @@ Version one supports the regular max cape and its worn item representation. Comb
 5. Select an entry and use **Move up**, **Move down**, **Move to…**, **Rename** or **Remove**.
    Use **Color…** to choose that entry's text color, or **Reset color** to restore the default.
 6. Tick the original submenu visibility boxes to retain any native teleport groups you want alongside your layout. They start hidden.
+7. Under **Other cape actions**, untick **Show Spellbook** or **Show Features** to hide a whole menu, or untick individual options to hide just those entries. Open the cape menu first to populate the available individual options. These settings apply to inventory and worn cape menus and start with all actions visible.
 
 Changes save automatically and take effect on the next menu opening. Empty groups and unavailable destinations do not appear in the game menu. **Other teleports** contains currently available destinations that have no custom shortcut. The native active default entry stays at the top; your custom entries appear immediately below it. This can retain an original submenu if that submenu is itself your active default action.
 
@@ -52,6 +54,7 @@ A passing build verifies local logic, not actual game teleports. The player must
 - Test every available destination in each context. Check that the destination reached matches the label and normal restrictions/confirmation prompts remain in effect.
 - Toggle each original submenu independently and confirm custom shortcuts and Other teleports remain accessible.
 - Give two copies of a destination different colors, color a group, then restart and confirm both menu contexts retain those colors. Reset one color and confirm the other copy is unchanged.
+- Hide one Spellbook option and one Features option, then verify remaining options still work in both contexts. Hide every child and confirm the empty parent disappears; re-enable an entry from the sidebar to restore it. Hiding an entire group must retain individual choices for when it is shown again. The active default submenu remains visible to preserve click settings.
 - Confirm existing left-click/Shift-click selections, core swap configuration, Wear/Remove, Use/Drop/Examine, Features and Spellbook actions.
 - Move the cape to another inventory slot; open unrelated item and bank menus; confirm those menus are unchanged.
 - Switch RuneLite configuration profiles and restart the plugin/client to confirm layout persistence and separation.

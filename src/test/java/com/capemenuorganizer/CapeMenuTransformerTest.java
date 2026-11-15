@@ -15,6 +15,56 @@ public class CapeMenuTransformerTest
 	private final CapeContext worn = new CapeContext("worn", 100, 3);
 
 	@Test
+	public void selectivelyHidesSpellbooksAndFeaturesWithoutChangingRemainingActions()
+	{
+		MenuFixture menu = fixture("Teleports");
+		MenuEntry spellbook = menu.action("Spellbook", 8);
+		MenuFixture spells = (MenuFixture) spellbook.createSubMenu();
+		MenuEntry standard = spells.action("Standard", 65544);
+		spells.action("Ancient", 131080);
+		spells.action("Check", 196616);
+		MenuEntry features = menu.action("Features", 9);
+		MenuFixture perks = (MenuFixture) features.createSubMenu();
+		MenuEntry stamina = perks.action("Stamina Boost", 65545);
+		perks.action("Rename boat", 131081);
+		menu.action("Home", 4);
+		MenuLayout layout = new MenuLayout();
+		layout.hiddenActions.add("spellbook/ancient");
+		layout.hiddenActions.add("features/rename boat");
+		CapeMenuTransformer.Result result = transformer.transform(menu, layout, worn);
+		assertTrue(result.changed);
+		assertEquals("Check,Standard", names(spellbook.getSubMenu()));
+		assertSame(standard, spellbook.getSubMenu().getMenuEntries()[0]);
+		assertEquals("Stamina Boost", names(features.getSubMenu()));
+		assertSame(stamina, features.getSubMenu().getMenuEntries()[0]);
+		assertEquals("Spellbook / Ancient", result.capeActions.get("spellbook/ancient"));
+		assertEquals("Features / Rename boat", result.capeActions.get("features/rename boat"));
+	}
+
+	@Test
+	public void hidingWholeUtilityGroupOrAllItsChildrenRemovesEmptyParentExceptActiveDefault()
+	{
+		MenuFixture menu = fixture("Teleports");
+		MenuEntry spellbook = menu.action("Spellbook", 8);
+		((MenuFixture) spellbook.createSubMenu()).action("Standard", 65544);
+		MenuEntry features = menu.action("Features", 9);
+		((MenuFixture) features.createSubMenu()).action("Search", 65545);
+		menu.action("Home", 4);
+		MenuLayout layout = new MenuLayout();
+		layout.hiddenActions.add("spellbook");
+		layout.hiddenActions.add("features/search");
+		transformer.transform(menu, layout, inventory);
+		assertNull(named(menu, "Spellbook"));
+		assertNull(named(menu, "Features"));
+		MenuFixture withDefault = fixture("Teleports");
+		MenuEntry defaultEntry = withDefault.action("Spellbook", 8);
+		((MenuFixture) defaultEntry.createSubMenu()).action("Standard", 65544);
+		transformer.transform(withDefault, layout, inventory);
+		assertSame(defaultEntry, withDefault.getMenuEntries()[withDefault.getMenuEntries().length - 1]);
+		assertEquals("Standard", names(defaultEntry.getSubMenu()));
+	}
+
+	@Test
 	public void duplicateDestinationsAndGroupLabelsHaveIndependentColorsWithoutChangingActions()
 	{
 		MenuLayout layout = new MenuLayout();

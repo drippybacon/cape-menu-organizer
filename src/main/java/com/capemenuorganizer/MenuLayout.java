@@ -16,6 +16,7 @@ final class MenuLayout
 	int version = 1;
 	List<Entry> entries = new ArrayList<>();
 	Set<String> hiddenOriginals = new LinkedHashSet<>(ORIGINALS);
+	Set<String> hiddenActions = new LinkedHashSet<>();
 
 	static final class Entry
 	{
@@ -169,9 +170,19 @@ final class MenuLayout
 
 	void validate()
 	{
-		if (version != 1 || entries == null || hiddenOriginals == null || !ORIGINALS.containsAll(hiddenOriginals))
+		if (version != 1 || entries == null || hiddenOriginals == null || !ORIGINALS.containsAll(hiddenOriginals)
+			|| hiddenActions == null || hiddenActions.size() > 100)
 		{
 			throw new IllegalArgumentException("Unsupported or invalid layout configuration.");
+		}
+		for (String action : hiddenActions)
+		{
+			if (action == null || !plainText(action, 120) || !action.equals(CapeMenuTransformer.key(action))
+				|| !(action.equals("spellbook") || action.equals("features")
+					|| action.startsWith("spellbook/") || action.startsWith("features/")))
+			{
+				throw new IllegalArgumentException("Invalid hidden cape action.");
+			}
 		}
 		Set<String> ids = new HashSet<>();
 		for (Entry entry : entries)
