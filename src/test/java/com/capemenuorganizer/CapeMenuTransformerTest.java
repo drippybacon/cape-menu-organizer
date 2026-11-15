@@ -15,7 +15,7 @@ public class CapeMenuTransformerTest
 	private final CapeContext worn = new CapeContext("worn", 100, 3);
 
 	@Test
-	public void inventoryShiftEditorAddsMissingRootHomeWithoutChangingNativeOrSwapActions()
+	public void inventoryShiftLayoutIncludesCustomGroupsAndPreservesNativeDefaultAndSwapCallbacks()
 	{
 		MenuFixture menu = fixture("Teleports");
 		AtomicInteger callbacks = new AtomicInteger();
@@ -24,15 +24,15 @@ public class CapeMenuTransformerTest
 		Menu sub = swap.createSubMenu();
 		sub.createMenuEntry(-1).setOption("Home").setType(MenuAction.RUNELITE).onClick(entry -> callbacks.incrementAndGet());
 		MenuEntry crafting = menu.action("Crafting Guild", 65538);
-		MenuEntry teleports = named(menu, "Teleports");
 		MenuLayout layout = new MenuLayout();
 		layout.addTeleport(null, "Home");
 		layout.addTeleport(null, "Crafting Guild");
 		layout.addTeleport(layout.addGroup("Favorites").id, "Home");
 		assertTrue(transformer.transform(menu, layout, inventory).changed);
-		assertEquals("Crafting Guild,Home,Wear,Teleports,Swap left-click,Cancel", names(menu));
+		assertEquals("Crafting Guild,Home,Favorites,Wear,Swap left-click,Cancel", names(menu));
 		assertSame(crafting, menu.getMenuEntries()[menu.getMenuEntries().length - 1]);
-		assertSame(teleports, named(menu, "Teleports"));
+		assertNull(named(menu, "Teleports"));
+		assertEquals("Home", names(named(menu, "Favorites").getSubMenu()));
 		assertSame(swap, named(menu, "Swap left-click"));
 		assertSame(sub, swap.getSubMenu());
 		assertEquals(131074, named(menu, "Home").getIdentifier());
@@ -48,15 +48,13 @@ public class CapeMenuTransformerTest
 	{
 		MenuFixture menu = fixture("Guild Teleports");
 		menu.createMenuEntry(1).setOption("Swap shift-click").setType(MenuAction.RUNELITE);
-		MenuEntry nativeHome = menu.action("Home", 4);
+		menu.action("Home", 4);
 		menu.action("Crafting Guild", 5);
-		MenuEntry[] before = menu.getMenuEntries();
 		MenuLayout layout = new MenuLayout();
 		layout.addTeleport(null, "Home");
 		layout.addTeleport(null, "Crafting Guild");
-		assertFalse(transformer.transform(menu, layout, worn).changed);
-		assertArrayEquals(before, menu.getMenuEntries());
-		assertSame(nativeHome, named(menu, "Home"));
+		assertTrue(transformer.transform(menu, layout, worn).changed);
+		assertEquals("Crafting Guild,Home,Wear,Swap shift-click,Cancel", names(menu));
 	}
 
 	@Test
@@ -64,11 +62,37 @@ public class CapeMenuTransformerTest
 	{
 		MenuFixture menu = fixture("Teleports");
 		menu.createMenuEntry(1).setOption("Swap left-click").setType(MenuAction.RUNELITE);
-		MenuEntry[] before = menu.getMenuEntries();
 		MenuLayout layout = new MenuLayout();
 		layout.addTeleport(layout.addGroup("Favorites").id, "Home");
-		assertFalse(transformer.transform(menu, layout, inventory).changed);
-		assertArrayEquals(before, menu.getMenuEntries());
+		assertTrue(transformer.transform(menu, layout, inventory).changed);
+		assertEquals("Wear,Favorites,Swap left-click,Cancel", names(menu));
+		assertNull(named(menu, "Home"));
+		assertEquals("Home", names(named(menu, "Favorites").getSubMenu()));
+	}
+
+	@Test
+	public void modeSelectionUsesIndependentGroupsColorsAndOriginalVisibilityInBothContexts()
+	{
+		MenuLayout normal = new MenuLayout();
+		normal.addTeleport(normal.addGroup("Normal group").id, "Home");
+		MenuLayout shift = new MenuLayout();
+		shift.addTeleport(shift.addGroup("Shift group").id, "Farming Guild").color = 0xff00ff;
+		shift.hiddenOriginals.clear();
+		MenuLayouts pair = new MenuLayouts(normal, shift);
+		for (CapeContext context : new CapeContext[]{inventory, worn})
+		{
+			String nativeGroup = context == inventory ? "Teleports" : "Guild Teleports";
+			MenuFixture regular = fixture(nativeGroup);
+			MenuFixture modified = fixture(nativeGroup);
+			transformer.transform(regular, pair.forShift(false), context);
+			transformer.transform(modified, pair.forShift(true), context);
+			assertNotNull(named(regular, "Normal group"));
+			assertNull(named(regular, "Shift group"));
+			assertNull(named(regular, nativeGroup));
+			assertNotNull(named(modified, nativeGroup));
+			assertEquals("<col=ff00ff>Farming Guild</col>",
+				named(modified, "Shift group").getSubMenu().getMenuEntries()[0].getOption());
+		}
 	}
 
 	@Test

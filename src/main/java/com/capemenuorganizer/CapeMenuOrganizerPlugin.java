@@ -11,6 +11,7 @@ import javax.inject.Inject;
 import javax.swing.SwingUtilities;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.KeyCode;
 import net.runelite.api.Menu;
 import net.runelite.api.events.MenuOpened;
 import net.runelite.api.events.PostMenuSort;
@@ -35,7 +36,7 @@ public class CapeMenuOrganizerPlugin extends Plugin
 	@Inject private ColorPickerManager colorPickerManager;
 	private final CapeMenuTransformer transformer = new CapeMenuTransformer();
 	private volatile LayoutState state;
-	private volatile CapeMenuPanel panel;
+	private volatile CapeMenusPanel panel;
 	private volatile NavigationButton navigation;
 	private volatile boolean running;
 	private LayoutCodec codec;
@@ -51,7 +52,7 @@ public class CapeMenuOrganizerPlugin extends Plugin
 		onEdt(() ->
 		{
 			if (!running || state != activeState) { return; }
-			panel = new CapeMenuPanel(codec, colorPickerManager);
+			panel = new CapeMenusPanel(codec, colorPickerManager);
 			navigation = NavigationButton.builder().tooltip("Cape Menu Organizer").icon(icon()).panel(panel).priority(7).build();
 			toolbar.addNavigation(navigation);
 			refresh("Cape actions loaded. Hover the cape to refresh its current options.");
@@ -63,7 +64,7 @@ public class CapeMenuOrganizerPlugin extends Plugin
 	{
 		running = false;
 		NavigationButton oldNavigation = navigation;
-		CapeMenuPanel oldPanel = panel;
+		CapeMenusPanel oldPanel = panel;
 		navigation = null;
 		panel = null;
 		onEdt(() ->
@@ -90,14 +91,16 @@ public class CapeMenuOrganizerPlugin extends Plugin
 		LayoutState active = state;
 		if (!running || active == null) { return; }
 		LayoutState.Snapshot snapshot = active.current();
-		if (snapshot == null || snapshot.layout == null || snapshot.profileId != configManager.getProfile().getId()) { return; }
+		if (snapshot == null || snapshot.menus == null || snapshot.profileId != configManager.getProfile().getId()) { return; }
 		Menu menu = client.getMenu();
 		CapeContext context = CapeContext.detect(menu.getMenuEntries());
 		if (context == null) { return; }
 		try
 		{
-			CapeMenuTransformer.Result result = applyLayout ? transformer.transform(menu, snapshot.layout, context)
-				: transformer.discover(menu, snapshot.layout, context);
+			boolean shiftPressed = client.isKeyPressed(KeyCode.KC_SHIFT);
+			MenuLayout selected = snapshot.menus.forShift(shiftPressed);
+			CapeMenuTransformer.Result result = applyLayout ? transformer.transform(menu, selected, context)
+				: transformer.discover(menu, selected, context);
 			boolean learned = active.observe(snapshot, result.destinations);
 			learned |= active.observeActions(snapshot, result.capeActions);
 			if (applyLayout || learned) { refresh(result.status); }
@@ -112,7 +115,8 @@ public class CapeMenuOrganizerPlugin extends Plugin
 	@Subscribe
 	public void onConfigChanged(ConfigChanged event)
 	{
-		if (CapeMenuOrganizerConfig.GROUP.equals(event.getGroup()) && "layout".equals(event.getKey())) { reload(); }
+		if (CapeMenuOrganizerConfig.GROUP.equals(event.getGroup())
+			&& ("layout".equals(event.getKey()) || "menus".equals(event.getKey()))) { reload(); }
 	}
 
 	@Subscribe
@@ -127,7 +131,8 @@ public class CapeMenuOrganizerPlugin extends Plugin
 		if (!running || active == null) { return; }
 		synchronized (configManager)
 		{
-			active.reload(configManager.getProfile().getId(), configManager.getConfiguration(CapeMenuOrganizerConfig.GROUP, "layout"));
+			active.reload(configManager.getProfile().getId(), configManager.getConfiguration(CapeMenuOrganizerConfig.GROUP, "layout"),
+				configManager.getConfiguration(CapeMenuOrganizerConfig.GROUP, "menus"));
 		}
 		refresh("Cape actions loaded. Hover the cape to refresh its current options.");
 	}
@@ -139,24 +144,25 @@ public class CapeMenuOrganizerPlugin extends Plugin
 		if (snapshot == null) { return; }
 		onEdt(() ->
 		{
-			CapeMenuPanel editor = panel;
+			CapeMenusPanel editor = panel;
 			if (!running || editor == null || state != active || active.current() != snapshot) { return; }
-			editor.showLayout(snapshot.layout == null ? MenuLayout.defaults() : snapshot.layout,
+			editor.showLayouts(snapshot.menus,
 				active.catalog(snapshot), active.capeActions(snapshot),
-				snapshot.error == null ? message : snapshot.error, snapshot.layout != null,
-				value -> save(active, snapshot, value, false), () -> save(active, snapshot, MenuLayout.defaults(), true));
+				snapshot.error == null ? message : snapshot.error, snapshot.menus != null,
+				(shift, value) -> save(active, snapshot, value, false, shift),
+				shift -> save(active, snapshot, MenuLayout.defaults(), true, shift));
 		});
 	}
 
-	private void save(LayoutState active, LayoutState.Snapshot expected, MenuLayout value, boolean reset)
+	private void save(LayoutState active, LayoutState.Snapshot expected, MenuLayout value, boolean reset, boolean shift)
 	{
 		try
 		{
 			synchronized (configManager)
 			{
 				if (!running || state != active) { return; }
-				String json = active.prepareSave(expected, value, configManager.getProfile().getId(), reset);
-				configManager.setConfiguration(CapeMenuOrganizerConfig.GROUP, "layout", json);
+				String json = active.prepareSave(expected, value, configManager.getProfile().getId(), reset, shift);
+				configManager.setConfiguration(CapeMenuOrganizerConfig.GROUP, "menus", json);
 				// Also refresh when the encoded value was unchanged and no ConfigChanged event fired.
 				reload();
 			}

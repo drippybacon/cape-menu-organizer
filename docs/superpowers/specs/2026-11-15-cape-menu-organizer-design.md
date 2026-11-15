@@ -8,6 +8,14 @@ Use one editable layout for the regular max cape in inventory and equipment. The
 
 ## Layout and defaults
 
+### Approved Normal/Shift extension
+
+The editor has Normal and Shift tabs with fully independent groups, ordering, per-occurrence colors and original-menu visibility settings. Each mode is shared between inventory and worn cape. Import the existing single layout into two independent copies. Subsequent edits/reset affect only the selected tab; the first save materializes both copies atomically. Keep the legacy config value as migration input and use a new versioned paired `menus` value as the authoritative store once present.
+
+Runtime menu selection follows the actual Shift key at menu opening, independently of the selected editor tab. Both modes use the full custom layout. In Shift, keep RuneLite's swap-control entries and callbacks accessible alongside the custom layout, while applying that mode's original-menu masks. Native left-click/Shift-left-click defaults remain controlled by RuneLite and the currently active native default stays first. The prior supplemental-only Shift editor behavior is superseded.
+
+Unreadable paired data is retained without falling back to legacy data; show a clear error and disable edits until explicit reset. An explicit reset with unreadable paired data restores both modes and must say so in its confirmation. For valid data, reset only the selected tab. Modeless color callbacks capture their originating mode and snapshot so later edits/profile changes cannot overwrite another menu.
+
 Ordered root entries are either custom groups or native action/submenu references. Custom groups contain references only; custom groups cannot nest. Native submenu references can be placed inside a custom group and retain their own native children.
 
 The default layout contains exactly these groups and order:
@@ -24,11 +32,11 @@ RuneLite sidebar: catalog of observed native actions/submenus, ordered tree, Add
 
 The picker is seeded with known cape references and saved layout references immediately at startup; it must not be blank until a right-click. Non-mutating hover discovery learns additional current native options. Seeded choices never carry executable action data and do not bypass native availability checks. Use RuneLite's own ColorPickerManager with RGB-only text colors; save on close through the editor session captured at opening, and close owned dialogs on shutdown without saving stale changes.
 
-Original teleport menus have per-context visibility switches. Spellbook/Features originals and individual children have shared visibility switches. Original visibility does not disable independent custom shortcuts. Whole native submenu references respect selected child visibility. Empty custom groups/native submenu references are omitted. The active native default entry and its complete submenu are retained regardless of masking to preserve existing click choices. Shift-right-click swap editing is left intact.
+Original teleport menus have per-context visibility switches. Spellbook/Features originals and individual children have shared visibility switches. Original visibility does not disable independent custom shortcuts. Whole native submenu references respect selected child visibility. Empty custom groups/native submenu references are omitted. The active native default entry and its complete submenu are retained regardless of masking to preserve existing click choices. Shift-right-click swap controls remain accessible alongside its independently configured layout.
 
 Omit a custom root shortcut when it duplicates the current native default leaf action on the same cape. Preserve the native row, saved occurrence/color, and all deliberately grouped duplicates. The shortcut returns if the active default changes. Match native metadata/callback/context; known direct-versus-submenu Home and Crafting Guild operations can differ in identifier while representing the same destination. A matching name from another item or a different callback must not trigger suppression.
 
-In the Shift-right-click swap editor, retain all original entries/submenus/callbacks and the native default, but supplement any missing configured root leaf shortcut. Check every existing native root to avoid duplicating worn Home. Do not rebuild custom groups, apply visibility masks, or change swap configuration in this editor. This keeps inventory Home accessible when the Shift default is Crafting Guild.
+Shift-right-click renders the full Shift layout, retaining its native active default and original RuneLite swap-control entries and callbacks. Normal and Shift groups, colors and original-menu visibility are independent.
 
 ## Native action resolution
 

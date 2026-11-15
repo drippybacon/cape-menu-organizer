@@ -87,18 +87,12 @@ final class CapeMenuTransformer
 		MenuEntry[] original = menu.getMenuEntries();
 		Map<String, Action> actions = new LinkedHashMap<>();
 		Set<MenuEntry> teleportRoots = new HashSet<>();
-		boolean swapEditor = false;
 		if (context == null || original.length == 0)
 		{
 			return unchanged("Open the max cape menu in inventory or equipment.");
 		}
 		for (MenuEntry entry : original)
 		{
-			// Keep core's Shift-right-click editor intact while filling missing root shortcuts.
-			if (key(entry.getOption()).startsWith("swap "))
-			{
-				swapEditor = true;
-			}
 			if (context.matches(entry) && entry.getSubMenu() != null && isOriginalGroup(entry.getOption()))
 			{
 				if (!collect(entry.getSubMenu(), context, actions, 0))
@@ -135,7 +129,6 @@ final class CapeMenuTransformer
 			}
 			actions.put(CapeActionNames.key(shortcut.getKey()), new Action(shortcut.getValue(), shortcut.getKey(), children));
 		}
-		if (swapEditor) { return supplementSwapEditor(menu, original, layout, context, actions, utilityVisibility.catalog); }
 		// Count native submenu copies too: one reference may create several actual entries.
 		int totalEntries = count(menu, 0);
 		for (MenuLayout.Entry entry : layout.entries)
@@ -219,45 +212,6 @@ final class CapeMenuTransformer
 	private static Result unchanged(String reason)
 	{
 		return new Result(false, Collections.emptyList(), reason);
-	}
-
-	private static Result supplementSwapEditor(Menu menu, MenuEntry[] original, MenuLayout layout,
-		CapeContext context, Map<String, Action> actions, Map<String, String> utilityCatalog)
-	{
-		List<MenuLayout.Entry> missing = new ArrayList<>();
-		for (MenuLayout.Entry entry : layout.entries)
-		{
-			if (entry.isGroup()) { continue; }
-			Action action = actions.get(CapeActionNames.key(entry.destination));
-			if (action == null || action.children != null) { continue; }
-			boolean present = false;
-			for (MenuEntry existing : original)
-			{
-				if (action.matchesNativeEntry(existing, context)) { present = true; break; }
-			}
-			if (!present) { missing.add(entry); }
-		}
-		if (count(menu, 0) + missing.size() > 450)
-		{
-			return unchanged("Menu is too large; original swap editor retained.");
-		}
-		if (!missing.isEmpty())
-		{
-			List<MenuEntry> additions = new ArrayList<>();
-			for (MenuLayout.Entry entry : missing)
-			{
-				additions.add(actions.get(CapeActionNames.key(entry.destination)).copyTo(menu, entry.color));
-			}
-			Collections.reverse(additions);
-			List<MenuEntry> result = new ArrayList<>();
-			Collections.addAll(result, original);
-			result.addAll(result.size() - 1, additions);
-			menu.setMenuEntries(result.toArray(new MenuEntry[0]));
-		}
-		List<String> catalog = new ArrayList<>();
-		for (Action action : actions.values()) { catalog.add(action.reference); }
-		return new Result(!missing.isEmpty(), catalog, utilityCatalog,
-			"Shift swap editor preserved. Configured root shortcuts are available.");
 	}
 
 	private static boolean nativeAction(MenuEntry entry)

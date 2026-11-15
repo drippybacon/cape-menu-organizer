@@ -1,9 +1,10 @@
 # Cape Menu Organizer
 
-Create one shared max cape menu layout for inventory and equipment.
+Create independent Normal and Shift max cape menus, each shared between inventory and equipment.
 
 ## Features
 
+- Edit Normal and Shift menus independently, including groups, colors and visibility.
 - Create, rename and reorder your own groups.
 - Mix teleports, individual Spellbook/Features actions, and complete native Spellbook/Features submenus in the same layout.
 - Place an action directly in the main menu or inside a custom group.
@@ -29,23 +30,22 @@ There is no automatic Other teleports menu. Only actions assigned to your layout
 ## Using the editor
 
 1. Enable Cape Menu Organizer and open its cape icon in the RuneLite sidebar.
-2. The action picker is populated immediately with known cape actions and your saved references. Hovering the cape automatically learns additional current options; right-clicking also refreshes them. Editor choices do not invent game actions: custom shortcuts appear only when the corresponding action exists in the current native cape menu. Executable action data is never saved.
-3. Select Main menu for a direct shortcut, or create/select a custom group.
-4. Choose a teleport, a qualified action such as Spellbook / Ancient, or a complete Spellbook/Features submenu, then click Add action.
-5. Repeat to create independent copies. Move up/down controls order entries; Move to moves shortcuts between groups and the main menu. Rename changes custom group names. Remove deletes only the selected occurrence (or a selected group and its shortcuts).
-6. Use Color to open RuneLite's normal color picker for the selected group or shortcut. Close the picker to save the selected text color, or use Reset color to restore the default.
-7. Original teleport submenus controls show or hide native teleport menus independently in inventory/equipment. They start hidden.
-8. Original cape action menus controls show or hide native Spellbook/Features menus and individual entries. They start visible. Hiding a native original does not disable a separately added custom shortcut. A complete submenu reference respects the selected child visibility; direct shortcuts remain independent.
+2. Choose the Normal or Shift tab to edit that menu. Both initially copy your existing layout, including colors and visibility; subsequent edits are independent. The selected tab does not control which menu appears in game: holding Shift does.
+3. The action picker is populated immediately with known cape actions and your saved references. Hovering the cape automatically learns additional current options; right-clicking also refreshes them. Editor choices do not invent game actions: custom shortcuts appear only when the corresponding action exists in the current native cape menu. Executable action data is never saved.
+4. Select Main menu for a direct shortcut, or create/select a custom group.
+5. Choose a teleport, a qualified action such as Spellbook / Ancient, or a complete Spellbook/Features submenu, then click Add action.
+6. Repeat to create independent copies. Move up/down controls order entries; Move to moves shortcuts between groups and the main menu. Rename changes custom group names. Remove deletes only the selected occurrence (or a selected group and its shortcuts).
+7. Use Color to open RuneLite's normal color picker for the selected group or shortcut. Close the picker to save the selected text color, or use Reset color to restore the default.
+8. Original teleport submenus controls show or hide native teleport menus independently in inventory/equipment. They start hidden.
+9. Original cape action menus controls show or hide native Spellbook/Features menus and individual entries. They start visible. Hiding a native original does not disable a separately added custom shortcut. A complete submenu reference respects the selected child visibility; direct shortcuts remain independent.
 
 Custom groups cannot contain other custom groups. A complete native Spellbook or Features submenu may be placed inside a custom group, creating an additional native submenu level. Empty/unavailable custom groups and references do not appear in the game menu.
 
-Your active native default entry stays at the top; custom entries follow in layout order. The active default submenu is retained intact even if its visibility box is off, to protect the current click setting. Hold Shift and right-click to configure clicks through core Menu Entry Swapper, then release Shift to inspect your organized menu.
-
-The Shift-right-click editor preserves every original entry, submenu and swap control. It also adds any configured top-level leaf shortcut that is missing from the native roots, such as inventory Home while Crafting Guild is the Shift action. A shortcut already present natively is not added again. Custom groups are not rebuilt in this configuration menu.
+Your active native default entry stays at the top; custom entries follow in layout order. The active default submenu is retained intact even if its visibility box is off, to protect the current click setting. Shift-right-click uses the complete Shift layout, including custom groups and visibility settings, while retaining RuneLite's Swap left-click and Swap shift-click controls. Existing left-click and Shift-left-click choices remain controlled by Menu Entry Swapper.
 
 If a custom top-level shortcut duplicates the active native default action, the custom row is omitted for that menu opening. The saved shortcut and color remain unchanged, so it returns when another action is the default. Intentional copies inside custom groups are preserved. This avoids two Home rows with native left-click Home, without changing the native click action.
 
-Changes save automatically and apply on the next menu opening. Reset requires confirmation. Invalid saved data disables editing and menu replacement until you explicitly reset; it is not silently overwritten. Disabling the plugin restores normal menus on the next opening.
+Changes save automatically and apply on the next menu opening. Both layouts save together in the active profile; the legacy layout is retained as an import backup. Reset requires confirmation and affects only the selected menu. Invalid saved data disables editing and menu replacement until you explicitly reset both menus; it is not silently overwritten. Disabling the plugin restores normal menus on the next opening.
 
 ## Development
 
@@ -73,7 +73,8 @@ A passing build verifies local logic, not actual game actions. The player must c
 - Test Feldip Hills in both contexts and confirm it reaches the intended location. An existing Carnivorous chinchompas shortcut should now show Feldip Hills.
 - Test every assigned action, normal restrictions/confirmations, independent duplicate colors, removal/reordering, and persistence across restart/profile changes.
 - With native Home left-click and a custom root Home shortcut, confirm only native Home appears at the top. Grouped Home copies must remain. With another native default, the custom root Home must return; duplicate root Crafting Guild should similarly be omitted when it is the native default.
-- Hold Shift and right-click the inventory cape with Crafting Guild as the Shift action and Home configured at the root: Home should appear beneath the native default while all swap controls/native groups remain. Repeat worn: the existing native Home should remain once. Configured Shift-left-click must still perform Crafting Guild.
+- Give Normal and Shift different group names, colors and visibility settings. Right-click both inventory and worn cape with and without Shift: each should use its corresponding layout, regardless of the selected editor tab. Check that changing/resetting one tab leaves the other unchanged, including after restart.
+- With Crafting Guild as the Shift action and Home configured at the Shift root, Shift-right-click should show Home once below the native default, plus the configured Shift groups and RuneLite swap controls. Shift-left-click must still perform Crafting Guild.
 - Confirm existing clicks and Shift-right-click configuration, normal non-teleport item actions, unrelated items/bank menus, cape slot changes, disable/reset.
 
 If native action data is unrecognized, the original menu is retained. A layout that would exceed the menu capacity also falls back before mutation.

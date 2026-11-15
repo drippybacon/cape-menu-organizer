@@ -14,4 +14,10 @@ public interface CapeMenuOrganizerConfig extends Config
 	{
 		return "";
 	}
+
+	@ConfigItem(keyName = "menus", name = "Normal and Shift layouts", description = "Edited through the Cape Menu Organizer sidebar", hidden = true)
+	default String menus()
+	{
+		return "";
+	}
 }

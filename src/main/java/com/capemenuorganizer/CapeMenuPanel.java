@@ -123,7 +123,8 @@ final class CapeMenuPanel extends PluginPanel
 			MenuLayout.Entry entry = selected();
 			if (entry == null) { return; }
 			RuneliteColorPicker picker = colorPickerManager.create(this,
-				entry.color == null ? Color.WHITE : new Color(entry.color), entry.toString(), true);
+				entry.color == null ? Color.WHITE : new Color(entry.color),
+				getName() == null ? entry.toString() : getName() + " - " + entry, true);
 			activeColorPicker = picker;
 			// Capture the save session. A modeless picker must not write to a later profile/layout.
 			MenuLayout beforeColor = codec.copy(layout);
@@ -146,7 +147,9 @@ final class CapeMenuPanel extends PluginPanel
 		resetButton.setMargin(new Insets(4, 3, 4, 3));
 		resetButton.addActionListener(event ->
 		{
-			if (JOptionPane.showConfirmDialog(this, "Replace the saved layout with defaults?", "Reset layout",
+			String prompt = editable ? "Replace this menu's layout with defaults?"
+				: "Saved menus cannot be read. Replace both Normal and Shift layouts with defaults?";
+			if (JOptionPane.showConfirmDialog(this, prompt, "Reset layout",
 				JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION)
 			{
 				reset.run();

@@ -13,13 +13,13 @@ final class LayoutState
 	static final class Snapshot
 	{
 		final long profileId;
-		final MenuLayout layout;
+		final MenuLayouts menus;
 		final String error;
 
-		Snapshot(long profileId, MenuLayout layout, String error)
+		Snapshot(long profileId, MenuLayouts menus, String error)
 		{
 			this.profileId = profileId;
-			this.layout = layout;
+			this.menus = menus;
 			this.error = error;
 		}
 	}
@@ -34,7 +34,7 @@ final class LayoutState
 		this.codec = codec;
 	}
 
-	synchronized void reload(long profileId, String json)
+	synchronized void reload(long profileId, String legacy, String paired)
 	{
 		if (current == null || current.profileId != profileId)
 		{
@@ -45,15 +45,18 @@ final class LayoutState
 		}
 		try
 		{
-			current = new Snapshot(profileId, json == null || json.isEmpty() ? MenuLayout.defaults() : codec.decode(json), null);
-			for (MenuLayout.Entry entry : current.layout.all())
+			current = new Snapshot(profileId, codec.loadMenus(legacy, paired), null);
+			for (MenuLayout layout : new MenuLayout[]{current.menus.normal, current.menus.shift})
 			{
-				if (!entry.isGroup()) { catalog.add(entry.destination); }
+				for (MenuLayout.Entry entry : layout.all())
+				{
+					if (!entry.isGroup()) { catalog.add(entry.destination); }
+				}
 			}
 		}
 		catch (IllegalArgumentException ex)
 		{
-			current = new Snapshot(profileId, null, "Saved layout could not be read. Native menus retained. Reset explicitly to replace it.");
+			current = new Snapshot(profileId, null, "Saved menus could not be read. Native menus retained. Reset explicitly to restore both layouts.");
 		}
 	}
 
@@ -62,17 +65,18 @@ final class LayoutState
 		return current;
 	}
 
-	synchronized String prepareSave(Snapshot expected, MenuLayout value, long activeProfileId, boolean reset)
+	synchronized String prepareSave(Snapshot expected, MenuLayout value, long activeProfileId, boolean reset, boolean shift)
 	{
 		if (current != expected || expected.profileId != activeProfileId)
 		{
 			throw new IllegalArgumentException("The active profile or layout changed. Try your edit again.");
 		}
-		if (expected.layout == null && !reset)
+		if (expected.menus == null && !reset)
 		{
 			throw new IllegalArgumentException("Reset explicitly to replace the unreadable saved layout.");
 		}
-		return codec.encode(value);
+		MenuLayouts source = expected.menus == null ? codec.loadMenus(null, null) : expected.menus;
+		return codec.encodeMenus(new MenuLayouts(codec.copy(shift ? source.normal : value), codec.copy(shift ? value : source.shift)));
 	}
 
 	synchronized boolean observe(Snapshot expected, List<String> destinations)
