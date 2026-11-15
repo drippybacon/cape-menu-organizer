@@ -6,11 +6,11 @@ Reviewed 15 November 2026 for version 3.2.1, against RuneLite 1.13.6 and the cur
 | --- | --- |
 | Production compilation passes without warnings; 49 automated tests pass. | Player confirmation of the [manual release checks](TESTING.md). |
 | Java 11 bytecode, public RuneLite APIs, no additional production dependencies. | Plugin Hub CI and maintainer approval after submission. |
-| BSD license, current metadata, concise docs and a valid 15 × 29 PNG listing icon. | |
+| BSD license, current metadata, concise docs and a valid 15 Ã— 29 PNG listing icon. | |
 | Native action metadata/defaults and callbacks preserved; menu limits checked before changes. | |
 | Config validation, legacy import, independent layouts/copies and stale-editor protections reviewed. | |
 
-The default layout was compared with the current [Max cape teleport table](https://oldschool.runescape.wiki/w/Max_cape#Teleport_options): all 21 player destinations are included, with Home first in Poh. The wiki’s Wilderness Hunter area and Feldip Hunter area correspond to the native Black chinchompas and Feldip Hills labels. Teleport Boat (Pandemonium) moves the boat rather than the player and remains available as a Features action.
+The default layout was compared with the current [Max cape teleport table](https://oldschool.runescape.wiki/w/Max_cape#Teleport_options): all 21 player destinations are included, with Home first in Poh. The wikiâ€™s Wilderness Hunter area and Feldip Hunter area correspond to the native Black chinchompas and Feldip Hills labels. Teleport Boat (Pandemonium) moves the boat rather than the player and remains available as a Features action.
 
 ## Findings fixed
 

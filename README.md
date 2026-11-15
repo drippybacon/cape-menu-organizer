@@ -2,10 +2,6 @@
 
 Organise the Max cape menu with your own groups, order and colours. Use the same layout in your inventory and when worn, with separate menus for normal and Shift right-click.
 
-## Install
-
-Not yet available on Plugin Hub. See [development](docs/DEVELOPMENT.md) to build and run it locally.
-
 ## Edit your menus
 
 1. Open the **Max cape icon** in the RuneLite sidebar.
@@ -34,6 +30,6 @@ Shortcuts appear only when their native cape action is available. Oversized or u
 
 ## More information
 
-[Development](docs/DEVELOPMENT.md) · [Testing](docs/TESTING.md) · [Release review](docs/PUBLICATION-REVIEW.md)
+[Development](docs/DEVELOPMENT.md) Â· [Testing](docs/TESTING.md) Â· [Release review](docs/PUBLICATION-REVIEW.md)
 
 BSD 2-Clause. See [LICENSE](LICENSE) and [third-party notices](THIRD-PARTY-NOTICES.md).
