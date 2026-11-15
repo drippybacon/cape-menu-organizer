@@ -8,14 +8,28 @@ import static org.junit.Assert.*;
 public class LayoutStateTest
 {
 	@Test
+	public void freshEditorHasKnownCapeActionsBeforeAnyMenuWasOpened()
+	{
+		LayoutState state = new LayoutState(new LayoutCodec(new Gson()));
+		state.reload(1, "");
+		List<String> choices = state.catalog(state.current());
+		assertTrue(choices.contains("Feldip Hills"));
+		assertTrue(choices.contains("Home"));
+		assertTrue(choices.contains("Spellbook"));
+		assertTrue(choices.contains("Spellbook / Ancient"));
+		assertTrue(choices.contains("Features / Stamina Boost"));
+		assertEquals("Spellbook / Ancient", state.capeActions(state.current()).get("spellbook/ancient"));
+	}
+	@Test
 	public void staleEditorCannotSaveAfterProfileChange()
 	{
 		LayoutState state = new LayoutState(new LayoutCodec(new Gson()));
 		state.reload(1, "");
 		LayoutState.Snapshot old = state.current();
-		state.observe(old, List.of("Home", "Crafting Guild"));
+		state.observe(old, List.of("Profile one observed action"));
 		state.reload(2, "");
-		assertTrue(state.catalog(state.current()).isEmpty());
+		assertFalse(state.catalog(state.current()).contains("Profile one observed action"));
+		assertTrue(state.catalog(state.current()).contains("Feldip Hills"));
 		try
 		{
 			state.prepareSave(old, MenuLayout.defaults(), 2, false);
@@ -46,9 +60,10 @@ public class LayoutStateTest
 		LayoutState state = new LayoutState(new LayoutCodec(new Gson()));
 		state.reload(1, "");
 		LayoutState.Snapshot old = state.current();
-		state.observe(old, List.of("Home"));
+		state.observe(old, List.of("Session observed action"));
 		state.reload(1, "");
 		state.observe(old, List.of("Stale destination"));
-		assertEquals(List.of("Home"), state.catalog(state.current()));
+		assertTrue(state.catalog(state.current()).contains("Session observed action"));
+		assertFalse(state.catalog(state.current()).contains("Stale destination"));
 	}
 }

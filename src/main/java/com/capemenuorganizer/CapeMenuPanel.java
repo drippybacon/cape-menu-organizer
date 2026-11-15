@@ -6,6 +6,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -16,7 +17,6 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -29,11 +29,15 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreePath;
 import net.runelite.client.ui.PluginPanel;
+import net.runelite.client.ui.components.colorpicker.ColorPickerManager;
+import net.runelite.client.ui.components.colorpicker.RuneliteColorPicker;
 
 /** Swing state belongs to the EDT; saved changes are passed out as independent copies. */
 final class CapeMenuPanel extends PluginPanel
 {
 	private final LayoutCodec codec;
+	private final ColorPickerManager colorPickerManager;
+	private RuneliteColorPicker activeColorPicker;
 	private final JTree tree = new JTree();
 	private final JComboBox<String> destinations = new JComboBox<>();
 	private final JTextArea status = text("");
@@ -47,15 +51,16 @@ final class CapeMenuPanel extends PluginPanel
 	private boolean editable;
 	private boolean refreshing;
 
-	CapeMenuPanel(LayoutCodec codec)
+	CapeMenuPanel(LayoutCodec codec, ColorPickerManager colorPickerManager)
 	{
 		this.codec = codec;
+		this.colorPickerManager = colorPickerManager;
 		setLayout(new BorderLayout(0, 8));
 		setBorder(BorderFactory.createEmptyBorder(10, 8, 10, 8));
 		JPanel content = new JPanel();
 		content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 		content.add(new JLabel("Cape Menu Organizer"));
-		content.add(text("Shared inventory and worn layout. Changes save automatically. Open your cape menu to load actions and submenus."));
+		content.add(text("Shared inventory and worn layout. Changes save automatically. Actions are ready to edit; hover your cape to refresh its current options."));
 		JScrollPane scroll = new JScrollPane(tree);
 		scroll.setPreferredSize(new Dimension(200, 260));
 		scroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 360));
@@ -117,8 +122,20 @@ final class CapeMenuPanel extends PluginPanel
 		{
 			MenuLayout.Entry entry = selected();
 			if (entry == null) { return; }
-			Color color = JColorChooser.showDialog(this, "Entry color", entry.color == null ? Color.WHITE : new Color(entry.color));
-			if (color != null) { edit(next -> next.setColor(entry.id, color.getRGB() & 0xffffff)); }
+			RuneliteColorPicker picker = colorPickerManager.create(this,
+				entry.color == null ? Color.WHITE : new Color(entry.color), entry.toString(), true);
+			activeColorPicker = picker;
+			// Capture the save session. A modeless picker must not write to a later profile/layout.
+			MenuLayout beforeColor = codec.copy(layout);
+			Consumer<MenuLayout> saveSession = save;
+			picker.setOnClose(color ->
+			{
+				if (activeColorPicker == picker) { activeColorPicker = null; }
+				beforeColor.setColor(entry.id, color.getRGB() & 0xffffff);
+				saveSession.accept(codec.copy(beforeColor));
+			});
+			picker.setLocationRelativeTo(this);
+			picker.setVisible(true);
 		});
 		addButton("Reset color", () ->
 		{
@@ -238,6 +255,17 @@ final class CapeMenuPanel extends PluginPanel
 	void setStatus(String message)
 	{
 		status.setText(message);
+	}
+
+	void closeColorPicker()
+	{
+		RuneliteColorPicker picker = activeColorPicker;
+		activeColorPicker = null;
+		if (picker != null)
+		{
+			picker.setOnClose(null);
+			picker.dispatchEvent(new WindowEvent(picker, WindowEvent.WINDOW_CLOSING));
+		}
 	}
 
 	private static JTextArea text(String value)

@@ -51,6 +51,37 @@ final class CapeMenuTransformer
 		return GROUP_NAMES.contains(key(option));
 	}
 
+	Result discover(Menu menu, MenuLayout layout, CapeContext context)
+	{
+		MenuEntry[] original = menu.getMenuEntries();
+		if (context == null || original.length == 0) { return unchanged("No cape menu to inspect."); }
+		Map<String, Action> observed = new LinkedHashMap<>();
+		for (MenuEntry entry : original)
+		{
+			if (context.matches(entry) && entry.getSubMenu() != null && isOriginalGroup(entry.getOption()))
+			{
+				if (!collect(entry.getSubMenu(), context, observed, 0))
+				{
+					return unchanged("Unrecognized native cape menu; editor choices retained.");
+				}
+			}
+		}
+		if (observed.isEmpty()) { return unchanged("No native teleport actions found."); }
+		List<String> catalog = new ArrayList<>();
+		for (Action action : observed.values()) { catalog.add(action.reference); }
+		for (MenuEntry entry : original)
+		{
+			if (context.matches(entry) && entry.getSubMenu() == null && nativeAction(entry)
+				&& ROOT_TELEPORTS.contains(key(entry.getOption())))
+			{
+				catalog.add(CapeActionNames.canonical(entry.getOption()));
+			}
+		}
+		CapeActionVisibility utilities = new CapeActionVisibility(original, context, layout);
+		catalog.addAll(utilities.shortcuts.keySet());
+		return new Result(false, catalog, utilities.catalog, "Cape actions refreshed. Ready to edit.");
+	}
+
 	Result transform(Menu menu, MenuLayout layout, CapeContext context)
 	{
 		MenuEntry[] original = menu.getMenuEntries();

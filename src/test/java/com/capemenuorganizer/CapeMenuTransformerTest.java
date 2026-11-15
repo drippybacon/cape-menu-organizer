@@ -15,6 +15,24 @@ public class CapeMenuTransformerTest
 	private final CapeContext worn = new CapeContext("worn", 100, 3);
 
 	@Test
+	public void hoverDiscoveryFindsUtilityActionsWithoutChangingNativeMenuOrDefault()
+	{
+		MenuFixture menu = fixture("Teleports");
+		MenuEntry spellbook = menu.action("Spellbook", 8);
+		MenuFixture spells = (MenuFixture) spellbook.createSubMenu();
+		spells.action("Ancient", 65544);
+		MenuEntry[] before = menu.getMenuEntries();
+		MenuEntry[] childBefore = spells.getMenuEntries();
+		CapeMenuTransformer.Result observed = transformer.discover(menu, new MenuLayout(), inventory);
+		assertTrue(observed.destinations.contains("Farming Guild"));
+		assertTrue(observed.destinations.contains("Spellbook / Ancient"));
+		assertFalse(observed.changed);
+		assertArrayEquals(before, menu.getMenuEntries());
+		assertArrayEquals(childBefore, spells.getMenuEntries());
+		assertSame(spellbook, menu.getMenuEntries()[menu.getMenuEntries().length - 1]);
+	}
+
+	@Test
 	public void repeatedNativeSubmenusRespectTotalMenuCapacityBeforeMutation()
 	{
 		MenuFixture menu = fixture("Teleports");

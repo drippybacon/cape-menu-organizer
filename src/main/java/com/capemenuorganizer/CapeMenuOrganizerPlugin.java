@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.Menu;
 import net.runelite.api.events.MenuOpened;
+import net.runelite.api.events.PostMenuSort;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
@@ -21,6 +22,7 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
+import net.runelite.client.ui.components.colorpicker.ColorPickerManager;
 
 @Slf4j
 @PluginDescriptor(name = "Cape Menu Organizer", description = "Organize max cape teleport menus", tags = {"cape", "teleport", "menu"})
@@ -30,6 +32,7 @@ public class CapeMenuOrganizerPlugin extends Plugin
 	@Inject private ConfigManager configManager;
 	@Inject private ClientToolbar toolbar;
 	@Inject private Gson gson;
+	@Inject private ColorPickerManager colorPickerManager;
 	private final CapeMenuTransformer transformer = new CapeMenuTransformer();
 	private volatile LayoutState state;
 	private volatile CapeMenuPanel panel;
@@ -48,10 +51,10 @@ public class CapeMenuOrganizerPlugin extends Plugin
 		onEdt(() ->
 		{
 			if (!running || state != activeState) { return; }
-			panel = new CapeMenuPanel(codec);
+			panel = new CapeMenuPanel(codec, colorPickerManager);
 			navigation = NavigationButton.builder().tooltip("Cape Menu Organizer").icon(icon()).panel(panel).priority(7).build();
 			toolbar.addNavigation(navigation);
-			refresh("Open the max cape menu to load destinations.");
+			refresh("Cape actions loaded. Hover the cape to refresh its current options.");
 		});
 	}
 
@@ -60,16 +63,29 @@ public class CapeMenuOrganizerPlugin extends Plugin
 	{
 		running = false;
 		NavigationButton oldNavigation = navigation;
+		CapeMenuPanel oldPanel = panel;
 		navigation = null;
 		panel = null;
 		onEdt(() ->
 		{
+			if (oldPanel != null) { oldPanel.closeColorPicker(); }
 			if (oldNavigation != null) { toolbar.removeNavigation(oldNavigation); }
 		});
 	}
 
 	@Subscribe(priority = -1)
 	public void onMenuOpened(MenuOpened event)
+	{
+		observeMenu(true);
+	}
+
+	@Subscribe(priority = -2)
+	public void onPostMenuSort(PostMenuSort event)
+	{
+		if (!client.isMenuOpen()) { observeMenu(false); }
+	}
+
+	private void observeMenu(boolean applyLayout)
 	{
 		LayoutState active = state;
 		if (!running || active == null) { return; }
@@ -80,10 +96,11 @@ public class CapeMenuOrganizerPlugin extends Plugin
 		if (context == null) { return; }
 		try
 		{
-			CapeMenuTransformer.Result result = transformer.transform(menu, snapshot.layout, context);
-			active.observe(snapshot, result.destinations);
-			active.observeActions(snapshot, result.capeActions);
-			refresh(result.status);
+			CapeMenuTransformer.Result result = applyLayout ? transformer.transform(menu, snapshot.layout, context)
+				: transformer.discover(menu, snapshot.layout, context);
+			boolean learned = active.observe(snapshot, result.destinations);
+			learned |= active.observeActions(snapshot, result.capeActions);
+			if (applyLayout || learned) { refresh(result.status); }
 		}
 		catch (IllegalArgumentException ex)
 		{
@@ -112,7 +129,7 @@ public class CapeMenuOrganizerPlugin extends Plugin
 		{
 			active.reload(configManager.getProfile().getId(), configManager.getConfiguration(CapeMenuOrganizerConfig.GROUP, "layout"));
 		}
-		refresh("Layout loaded. Open the cape menu to refresh available destinations.");
+		refresh("Cape actions loaded. Hover the cape to refresh its current options.");
 	}
 
 	private void refresh(String message)

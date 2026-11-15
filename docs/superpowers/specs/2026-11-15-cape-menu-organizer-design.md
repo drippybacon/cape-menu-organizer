@@ -22,6 +22,8 @@ No automatic Other teleports menu or reserved group name. Unassigned entries are
 
 RuneLite sidebar: catalog of observed native actions/submenus, ordered tree, Add action/group, Rename, Remove, Move up/down/to, Color and Reset color controls. Each occurrence owns its own identity and optional RGB color. Removing one duplicate never removes another. Changes save automatically in the active RuneLite configuration profile.
 
+The picker is seeded with known cape references and saved layout references immediately at startup; it must not be blank until a right-click. Non-mutating hover discovery learns additional current native options. Seeded choices never carry executable action data and do not bypass native availability checks. Use RuneLite's own ColorPickerManager with RGB-only text colors; save on close through the editor session captured at opening, and close owned dialogs on shutdown without saving stale changes.
+
 Original teleport menus have per-context visibility switches. Spellbook/Features originals and individual children have shared visibility switches. Original visibility does not disable independent custom shortcuts. Whole native submenu references respect selected child visibility. Empty custom groups/native submenu references are omitted. The active native default entry and its complete submenu are retained regardless of masking to preserve existing click choices. Shift-right-click swap editing is left intact.
 
 ## Native action resolution

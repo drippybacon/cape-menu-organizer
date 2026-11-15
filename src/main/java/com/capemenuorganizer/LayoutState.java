@@ -39,11 +39,17 @@ final class LayoutState
 		if (current == null || current.profileId != profileId)
 		{
 			catalog.clear();
+			catalog.addAll(CapeActionCatalog.knownActions());
 			capeActions.clear();
+			capeActions.putAll(CapeActionCatalog.utilityActions());
 		}
 		try
 		{
 			current = new Snapshot(profileId, json == null || json.isEmpty() ? MenuLayout.defaults() : codec.decode(json), null);
+			for (MenuLayout.Entry entry : current.layout.all())
+			{
+				if (!entry.isGroup()) { catalog.add(entry.destination); }
+			}
 		}
 		catch (IllegalArgumentException ex)
 		{
@@ -74,12 +80,19 @@ final class LayoutState
 		return expected == current && catalog.addAll(destinations);
 	}
 
-	synchronized void observeActions(Snapshot expected, Map<String, String> observed)
+	synchronized boolean observeActions(Snapshot expected, Map<String, String> observed)
 	{
-		if (expected == current && capeActions.size() + observed.size() <= 100)
+		if (expected != current) { return false; }
+		boolean changed = false;
+		for (Map.Entry<String, String> action : observed.entrySet())
 		{
-			capeActions.putAll(observed);
+			if (capeActions.containsKey(action.getKey()) || capeActions.size() < 100)
+			{
+				String previous = capeActions.put(action.getKey(), action.getValue());
+				changed |= !action.getValue().equals(previous);
+			}
 		}
+		return changed;
 	}
 
 	synchronized Map<String, String> capeActions(Snapshot expected)
