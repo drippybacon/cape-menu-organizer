@@ -15,6 +15,63 @@ public class CapeMenuTransformerTest
 	private final CapeContext worn = new CapeContext("worn", 100, 3);
 
 	@Test
+	public void inventoryShiftEditorAddsMissingRootHomeWithoutChangingNativeOrSwapActions()
+	{
+		MenuFixture menu = fixture("Teleports");
+		AtomicInteger callbacks = new AtomicInteger();
+		MenuEntry swap = menu.createMenuEntry(1).setOption("Swap left-click").setType(MenuAction.RUNELITE)
+			.onClick(entry -> callbacks.incrementAndGet());
+		Menu sub = swap.createSubMenu();
+		sub.createMenuEntry(-1).setOption("Home").setType(MenuAction.RUNELITE).onClick(entry -> callbacks.incrementAndGet());
+		MenuEntry crafting = menu.action("Crafting Guild", 65538);
+		MenuEntry teleports = named(menu, "Teleports");
+		MenuLayout layout = new MenuLayout();
+		layout.addTeleport(null, "Home");
+		layout.addTeleport(null, "Crafting Guild");
+		layout.addTeleport(layout.addGroup("Favorites").id, "Home");
+		assertTrue(transformer.transform(menu, layout, inventory).changed);
+		assertEquals("Crafting Guild,Home,Wear,Teleports,Swap left-click,Cancel", names(menu));
+		assertSame(crafting, menu.getMenuEntries()[menu.getMenuEntries().length - 1]);
+		assertSame(teleports, named(menu, "Teleports"));
+		assertSame(swap, named(menu, "Swap left-click"));
+		assertSame(sub, swap.getSubMenu());
+		assertEquals(131074, named(menu, "Home").getIdentifier());
+		assertEquals(3, named(menu, "Home").getParam0());
+		assertEquals(100, named(menu, "Home").getParam1());
+		swap.onClick().accept(swap);
+		sub.getMenuEntries()[0].onClick().accept(sub.getMenuEntries()[0]);
+		assertEquals(2, callbacks.get());
+	}
+
+	@Test
+	public void wornShiftEditorDoesNotDuplicateExistingNonDefaultNativeHome()
+	{
+		MenuFixture menu = fixture("Guild Teleports");
+		menu.createMenuEntry(1).setOption("Swap shift-click").setType(MenuAction.RUNELITE);
+		MenuEntry nativeHome = menu.action("Home", 4);
+		menu.action("Crafting Guild", 5);
+		MenuEntry[] before = menu.getMenuEntries();
+		MenuLayout layout = new MenuLayout();
+		layout.addTeleport(null, "Home");
+		layout.addTeleport(null, "Crafting Guild");
+		assertFalse(transformer.transform(menu, layout, worn).changed);
+		assertArrayEquals(before, menu.getMenuEntries());
+		assertSame(nativeHome, named(menu, "Home"));
+	}
+
+	@Test
+	public void shiftEditorDoesNotCreateUnconfiguredRootShortcutFromGroupedCopy()
+	{
+		MenuFixture menu = fixture("Teleports");
+		menu.createMenuEntry(1).setOption("Swap left-click").setType(MenuAction.RUNELITE);
+		MenuEntry[] before = menu.getMenuEntries();
+		MenuLayout layout = new MenuLayout();
+		layout.addTeleport(layout.addGroup("Favorites").id, "Home");
+		assertFalse(transformer.transform(menu, layout, inventory).changed);
+		assertArrayEquals(before, menu.getMenuEntries());
+	}
+
+	@Test
 	public void redundantRootHomeIsOmittedButSavedAndNestedCopiesArePreserved()
 	{
 		MenuFixture menu = fixture("Guild Teleports");

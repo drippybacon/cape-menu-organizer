@@ -28,6 +28,8 @@ Original teleport menus have per-context visibility switches. Spellbook/Features
 
 Omit a custom root shortcut when it duplicates the current native default leaf action on the same cape. Preserve the native row, saved occurrence/color, and all deliberately grouped duplicates. The shortcut returns if the active default changes. Match native metadata/callback/context; known direct-versus-submenu Home and Crafting Guild operations can differ in identifier while representing the same destination. A matching name from another item or a different callback must not trigger suppression.
 
+In the Shift-right-click swap editor, retain all original entries/submenus/callbacks and the native default, but supplement any missing configured root leaf shortcut. Check every existing native root to avoid duplicating worn Home. Do not rebuild custom groups, apply visibility masks, or change swap configuration in this editor. This keeps inventory Home accessible when the Shift default is Crafting Guild.
+
 ## Native action resolution
 
 Read only current native max cape inventory/worn widgets and menus through public APIs. Never store executable action metadata or synthesize server actions. Copy current leaf identifiers, item/widget/slot/world parameters, flags and callbacks. A copied native submenu is a presentation container with cloned current children; selecting a leaf performs only that native action.
