@@ -2,6 +2,8 @@
 
 Organise the Max cape menu with your own groups, order and colours. Use the same layout in your inventory and when worn, with separate menus for normal and Shift right-click.
 
+<img src="docs/images/menu-example.png" alt="Custom Max cape groups and coloured teleport entries, with the Guild submenu open" width="520">
+
 ## Edit your menus
 
 1. Open the **Max cape icon** in the RuneLite sidebar.
