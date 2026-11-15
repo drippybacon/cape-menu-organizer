@@ -1,7 +1,6 @@
 package com.capemenuorganizer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -48,13 +47,17 @@ final class MenuLayout
 	static MenuLayout defaults()
 	{
 		MenuLayout layout = new MenuLayout();
-		layout.addTeleport(null, "Home");
-		Entry guilds = layout.addGroup("Guilds");
-		for (String destination : Arrays.asList("Crafting Guild", "Farming Guild", "Fishing Guild", "Warriors' Guild"))
-		{
-			layout.addTeleport(guilds.id, destination);
-		}
+		layout.defaultGroup("Poh", "Aldarin", "Brimhaven", "Hosidius", "Pollnivneach", "Prifddinas",
+			"Rellekka", "Rimmington", "Taverley", "Yanille");
+		layout.defaultGroup("Guild", "Crafting Guild", "Farming Guild", "Fishing Guild", "Hunter Guild", "Warrior's Guild");
+		layout.defaultGroup("Skill", "Black chinchompas", "Boat", "Feldip Hills", "Last Boat", "Otto's Grotto", "The Pandemonium");
 		return layout;
+	}
+
+	private void defaultGroup(String name, String... actions)
+	{
+		Entry group = addGroup(name);
+		for (String action : actions) { addTeleport(group.id, action); }
 	}
 
 	Entry addGroup(String name)
@@ -72,7 +75,7 @@ final class MenuLayout
 		List<Entry> target = container(groupId);
 		ensureCapacity();
 		Entry entry = new Entry();
-		entry.destination = destination;
+		entry.destination = CapeActionNames.canonical(destination);
 		target.add(entry);
 		return entry;
 	}
@@ -227,9 +230,9 @@ final class MenuLayout
 
 	static void checkName(String name)
 	{
-		if (!plainText(name, 40) || "Other teleports".equalsIgnoreCase(name.trim()))
+		if (!plainText(name, 40))
 		{
-			throw new IllegalArgumentException("Use a plain group name of 1–40 characters (except Other teleports).");
+			throw new IllegalArgumentException("Use a plain group name of 1–40 characters.");
 		}
 	}
 

@@ -90,14 +90,40 @@ final class CapeMenuTransformer
 			}
 		}
 		layout.validate();
-		// Stay well below the client's menu entry capacity, including existing submenus.
-		if (count(menu, 0) + layout.all().size() + actions.size() + 1 > 450)
-		{
-			return unchanged("Menu is too large; original menu retained.");
-		}
-
 		MenuEntry defaultEntry = original[original.length - 1];
 		CapeActionVisibility utilityVisibility = new CapeActionVisibility(original, context, layout);
+		for (Map.Entry<String, MenuEntry> shortcut : utilityVisibility.shortcuts.entrySet())
+		{
+			List<Action> children = null;
+			MenuEntry[] submenu = utilityVisibility.submenus.get(shortcut.getKey());
+			if (submenu != null)
+			{
+				children = new ArrayList<>();
+				for (MenuEntry child : submenu) { children.add(new Action(child)); }
+			}
+			actions.put(CapeActionNames.key(shortcut.getKey()), new Action(shortcut.getValue(), shortcut.getKey(), children));
+		}
+		// Count native submenu copies too: one reference may create several actual entries.
+		int totalEntries = count(menu, 0);
+		for (MenuLayout.Entry entry : layout.entries)
+		{
+			if (entry.isGroup())
+			{
+				int childCount = 0;
+				for (MenuLayout.Entry child : entry.children)
+				{
+					Action action = actions.get(CapeActionNames.key(child.destination));
+					if (action != null) { childCount += action.entryCount(); }
+				}
+				if (childCount > 0) { totalEntries += 1 + childCount; }
+			}
+			else
+			{
+				Action action = actions.get(CapeActionNames.key(entry.destination));
+				if (action != null) { totalEntries += action.entryCount(); }
+			}
+		}
+		if (totalEntries > 450) { return unchanged("Menu is too large; original menu retained."); }
 		List<MenuEntry> retained = new ArrayList<>();
 		for (MenuEntry entry : original)
 		{
@@ -110,7 +136,6 @@ final class CapeMenuTransformer
 			}
 		}
 		List<MenuEntry> customDisplayOrder = new ArrayList<>();
-		Set<String> assigned = new HashSet<>();
 		for (MenuLayout.Entry entry : layout.entries)
 		{
 			if (entry.isGroup())
@@ -118,11 +143,10 @@ final class CapeMenuTransformer
 				List<Action> group = new ArrayList<>();
 				for (MenuLayout.Entry child : entry.children)
 				{
-					Action action = actions.get(key(child.destination));
+					Action action = actions.get(CapeActionNames.key(child.destination));
 					if (action != null)
 					{
 						group.add(action);
-						assigned.add(key(child.destination));
 					}
 				}
 				if (!group.isEmpty())
@@ -130,33 +154,19 @@ final class CapeMenuTransformer
 					List<Integer> colors = new ArrayList<>();
 					for (MenuLayout.Entry child : entry.children)
 					{
-						if (actions.containsKey(key(child.destination))) { colors.add(child.color); }
+						if (actions.containsKey(CapeActionNames.key(child.destination))) { colors.add(child.color); }
 					}
 					customDisplayOrder.add(addGroup(menu, colored(entry.name, entry.color), group, colors));
 				}
 			}
 			else
 			{
-				Action action = actions.get(key(entry.destination));
+				Action action = actions.get(CapeActionNames.key(entry.destination));
 				if (action != null)
 				{
 					customDisplayOrder.add(action.copyTo(menu, entry.color));
-					assigned.add(key(entry.destination));
 				}
 			}
-		}
-		List<Action> unassigned = new ArrayList<>();
-		for (Map.Entry<String, Action> action : actions.entrySet())
-		{
-			if (!assigned.contains(action.getKey()))
-			{
-				unassigned.add(action.getValue());
-			}
-		}
-		unassigned.sort((a, b) -> a.option.compareToIgnoreCase(b.option));
-		if (!unassigned.isEmpty())
-		{
-			customDisplayOrder.add(addGroup(menu, "Other teleports", unassigned, Collections.nCopies(unassigned.size(), null)));
 		}
 		// Menu arrays are reversed. Insert custom entries below the untouched active default.
 		Collections.reverse(customDisplayOrder);
@@ -166,11 +176,11 @@ final class CapeMenuTransformer
 		List<String> catalog = new ArrayList<>();
 		for (Action action : actions.values())
 		{
-			catalog.add(action.option);
+			catalog.add(action.reference);
 		}
 		catalog.sort(String.CASE_INSENSITIVE_ORDER);
 		return new Result(true, catalog, utilityVisibility.catalog,
-			"Layout applied to " + context.name + " cape (" + catalog.size() + " destinations).");
+			"Layout applied to " + context.name + " cape (" + catalog.size() + " available actions).");
 	}
 
 	private static Result unchanged(String reason)
@@ -209,7 +219,7 @@ final class CapeMenuTransformer
 				return false;
 			}
 			Action action = new Action(entry);
-			Action previous = actions.putIfAbsent(key(name), action);
+			Action previous = actions.putIfAbsent(CapeActionNames.key(name), action);
 			if (previous != null && !previous.sameOperation(action))
 			{
 				return false;
@@ -258,7 +268,8 @@ final class CapeMenuTransformer
 
 	private static final class Action
 	{
-		private final String option, target;
+		private final String option, target, reference;
+		private final List<Action> children;
 		private final int identifier, param0, param1, itemId, worldViewId;
 		private final MenuAction type;
 		private final boolean forceLeftClick, deprioritized;
@@ -266,7 +277,14 @@ final class CapeMenuTransformer
 
 		Action(MenuEntry source)
 		{
-			option = Text.removeTags(source.getOption()).trim();
+			this(source, CapeActionNames.canonical(source.getOption()), null);
+		}
+
+		Action(MenuEntry source, String reference, List<Action> children)
+		{
+			option = CapeActionNames.canonical(source.getOption());
+			this.reference = reference;
+			this.children = children;
 			target = source.getTarget();
 			identifier = source.getIdentifier();
 			param0 = source.getParam0();
@@ -285,11 +303,28 @@ final class CapeMenuTransformer
 				&& itemId == other.itemId && type == other.type && callback == other.callback;
 		}
 
+		int entryCount()
+		{
+			int count = 1;
+			if (children != null)
+			{
+				for (Action child : children) { count += child.entryCount(); }
+			}
+			return count;
+		}
+
 		MenuEntry copyTo(Menu menu, Integer color)
 		{
-			return menu.createMenuEntry(-1).setOption(colored(option, color)).setTarget(target).setIdentifier(identifier)
+			MenuEntry copy = menu.createMenuEntry(-1).setOption(colored(option, color)).setTarget(target).setIdentifier(identifier)
 				.setParam0(param0).setParam1(param1).setItemId(itemId).setWorldViewId(worldViewId)
 				.setType(type).setForceLeftClick(forceLeftClick).setDeprioritized(deprioritized).onClick(callback);
+			if (children != null)
+			{
+				copy.setType(MenuAction.RUNELITE).onClick(null);
+				Menu submenu = copy.createSubMenu();
+				for (Action child : children) { child.copyTo(submenu, null); }
+			}
+			return copy;
 		}
 	}
 }

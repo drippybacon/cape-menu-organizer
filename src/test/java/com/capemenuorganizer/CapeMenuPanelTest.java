@@ -55,10 +55,10 @@ public class CapeMenuPanelTest
 			CapeMenuPanel panel = new CapeMenuPanel(new LayoutCodec(new Gson()));
 			MenuLayout original = new MenuLayout();
 			panel.showLayout(original, List.of("Home"), "Ready", true, saved::set, () -> {});
-			button(panel, "Add teleport").doClick();
+			button(panel, "Add action").doClick();
 			assertEquals(1, saved.get().entries.size());
 			String firstId = saved.get().entries.get(0).id;
-			button(panel, "Add teleport").doClick();
+			button(panel, "Add action").doClick();
 			assertEquals(2, saved.get().entries.size());
 			assertNotEquals(firstId, saved.get().entries.get(1).id);
 			assertEquals(0, original.entries.size());
@@ -73,7 +73,7 @@ public class CapeMenuPanelTest
 			CapeMenuPanel panel = new CapeMenuPanel(new LayoutCodec(new Gson()));
 			panel.showLayout(new MenuLayout(), List.of("Home"), "Invalid configuration", false,
 				layout -> fail("Invalid config must not be overwritten"), () -> {});
-			assertFalse(button(panel, "Add teleport").isEnabled());
+			assertFalse(button(panel, "Add action").isEnabled());
 			assertTrue(button(panel, "Reset layout").isEnabled());
 		});
 	}

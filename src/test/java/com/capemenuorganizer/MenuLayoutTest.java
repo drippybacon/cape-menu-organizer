@@ -2,11 +2,40 @@ package com.capemenuorganizer;
 
 import com.google.gson.Gson;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class MenuLayoutTest
 {
+	@Test
+	public void defaultsMatchRequestedPohGuildAndSkillLayout()
+	{
+		MenuLayout layout = MenuLayout.defaults();
+		assertEquals(List.of("Poh", "Guild", "Skill"), layout.entries.stream().map(e -> e.name).collect(Collectors.toList()));
+		assertEquals(List.of("Aldarin", "Brimhaven", "Hosidius", "Pollnivneach", "Prifddinas", "Rellekka", "Rimmington", "Taverley", "Yanille"),
+			layout.entries.get(0).children.stream().map(e -> e.destination).collect(Collectors.toList()));
+		assertEquals(List.of("Crafting Guild", "Farming Guild", "Fishing Guild", "Hunter Guild", "Warrior's Guild"),
+			layout.entries.get(1).children.stream().map(e -> e.destination).collect(Collectors.toList()));
+		assertEquals(List.of("Black chinchompas", "Boat", "Feldip Hills", "Last Boat", "Otto's Grotto", "The Pandemonium"),
+			layout.entries.get(2).children.stream().map(e -> e.destination).collect(Collectors.toList()));
+	}
+
+	@Test
+	public void existingAliasesMigrateWithoutChangingOccurrenceIdsOrColorsAndFallbackNameIsReusable()
+	{
+		MenuLayout old = new MenuLayout();
+		MenuLayout.Entry shortcut = old.addTeleport(null, "Home");
+		shortcut.destination = "Carnivorous chinchompas";
+		shortcut.color = 0x123456;
+		LayoutCodec codec = new LayoutCodec(new Gson());
+		MenuLayout migrated = codec.decode(codec.encode(old));
+		assertEquals("Feldip Hills", migrated.entries.get(0).destination);
+		assertEquals(shortcut.id, migrated.entries.get(0).id);
+		assertEquals(Integer.valueOf(0x123456), migrated.entries.get(0).color);
+		assertEquals("Other teleports", migrated.addGroup("Other teleports").name);
+	}
 	@Test
 	public void existingSavedLayoutLoadsWithAllUtilityActionsVisible()
 	{

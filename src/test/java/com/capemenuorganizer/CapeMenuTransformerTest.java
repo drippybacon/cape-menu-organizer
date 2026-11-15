@@ -15,6 +15,79 @@ public class CapeMenuTransformerTest
 	private final CapeContext worn = new CapeContext("worn", 100, 3);
 
 	@Test
+	public void repeatedNativeSubmenusRespectTotalMenuCapacityBeforeMutation()
+	{
+		MenuFixture menu = fixture("Teleports");
+		MenuFixture spells = (MenuFixture) menu.action("Spellbook", 8).createSubMenu();
+		for (int i = 0; i < 8; i++) { spells.action("Book " + i, 65544 + i); }
+		menu.action("Home", 4);
+		MenuEntry[] before = menu.getMenuEntries();
+		MenuLayout layout = new MenuLayout();
+		for (int i = 0; i < 60; i++) { layout.addTeleport(null, "Spellbook"); }
+		assertFalse(transformer.transform(menu, layout, inventory).changed);
+		assertArrayEquals(before, menu.getMenuEntries());
+	}
+
+	@Test
+	public void utilityActionsAndWholeSubmenusCanBeMixedWithTeleportsEvenWhenOriginalIsHidden()
+	{
+		MenuFixture menu = fixture("Teleports");
+		MenuEntry spellbook = menu.action("Spellbook", 8);
+		MenuFixture spells = (MenuFixture) spellbook.createSubMenu();
+		spells.action("Ancient", 65544);
+		spells.action("Check", 131080);
+		MenuEntry features = menu.action("Features", 9);
+		((MenuFixture) features.createSubMenu()).action("Stamina Boost", 65545);
+		menu.action("Home", 4);
+		MenuLayout layout = new MenuLayout();
+		String group = layout.addGroup("Everything").id;
+		layout.addTeleport(group, "Farming Guild");
+		layout.addTeleport(group, "Spellbook / Ancient");
+		layout.addTeleport(group, "Features / Stamina Boost");
+		layout.addTeleport(group, "Spellbook");
+		layout.hiddenActions.add("spellbook");
+		layout.hiddenActions.add("spellbook/check");
+		CapeMenuTransformer.Result result = transformer.transform(menu, layout, inventory);
+		Menu mixed = named(menu, "Everything").getSubMenu();
+		assertEquals("Farming Guild,Ancient,Stamina Boost,Spellbook", names(mixed));
+		assertEquals(65544, named(mixed, "Ancient").getIdentifier());
+		assertEquals(65545, named(mixed, "Stamina Boost").getIdentifier());
+		assertEquals("Ancient", names(named(mixed, "Spellbook").getSubMenu()));
+		assertNull(named(menu, "Spellbook"));
+		assertTrue(result.destinations.contains("Spellbook / Ancient"));
+		assertTrue(result.destinations.contains("Spellbook"));
+	}
+
+	@Test
+	public void chinchompaAliasesResolveToCurrentNativeFeldipActionInBothContexts()
+	{
+		MenuLayout layout = new MenuLayout();
+		layout.addTeleport(null, "Carnivorous chinchompas");
+		MenuFixture inv = fixture("Teleports");
+		((MenuFixture) inv.getMenuEntries()[1].getSubMenu()).action("Carnivorous chinchompas", 196610);
+		MenuFixture equipped = fixture("Skilling Areas");
+		((MenuFixture) equipped.getMenuEntries()[1].getSubMenu()).action("Feldip Hills", 262146);
+		CapeMenuTransformer.Result invResult = transformer.transform(inv, layout, inventory);
+		CapeMenuTransformer.Result wornResult = transformer.transform(equipped, layout, worn);
+		assertNotNull(named(inv, "Feldip Hills"));
+		assertNotNull(named(equipped, "Feldip Hills"));
+		assertEquals(196610, named(inv, "Feldip Hills").getIdentifier());
+		assertEquals(262146, named(equipped, "Feldip Hills").getIdentifier());
+		assertTrue(invResult.destinations.contains("Feldip Hills"));
+		assertFalse(invResult.destinations.contains("Carnivorous chinchompas"));
+		assertEquals(invResult.destinations, wornResult.destinations);
+	}
+
+	@Test
+	public void unassignedActionsDoNotProduceAutomaticFallbackMenu()
+	{
+		MenuFixture menu = fixture("Teleports");
+		transformer.transform(menu, new MenuLayout(), inventory);
+		assertEquals("Wear,Cancel", names(menu));
+		assertNull(named(menu, "Other teleports"));
+	}
+
+	@Test
 	public void selectivelyHidesSpellbooksAndFeaturesWithoutChangingRemainingActions()
 	{
 		MenuFixture menu = fixture("Teleports");
@@ -98,7 +171,7 @@ public class CapeMenuTransformerTest
 		source.onClick(e -> calls.incrementAndGet()).setForceLeftClick(true).setDeprioritized(true);
 		assertTrue(transformer.transform(inv, layout, inventory).changed);
 		assertTrue(transformer.transform(equipped, layout, worn).changed);
-		assertEquals("Wear,Clues,Farming,Other teleports,Cancel", names(inv));
+		assertEquals("Wear,Clues,Farming,Cancel", names(inv));
 		assertEquals(names(inv), names(equipped));
 		MenuEntry duplicate = named(inv, "Clues").getSubMenu().getMenuEntries()[0];
 		assertEquals(source.getIdentifier(), duplicate.getIdentifier());
@@ -112,7 +185,7 @@ public class CapeMenuTransformerTest
 		duplicate.onClick().accept(duplicate);
 		assertEquals(1, calls.get());
 		assertNotSame(duplicate, named(inv, "Farming").getSubMenu().getMenuEntries()[0]);
-		assertEquals("Home", names(named(inv, "Other teleports").getSubMenu()));
+		assertNull(named(inv, "Other teleports"));
 	}
 
 	@Test

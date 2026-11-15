@@ -55,7 +55,7 @@ final class CapeMenuPanel extends PluginPanel
 		JPanel content = new JPanel();
 		content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 		content.add(new JLabel("Cape Menu Organizer"));
-		content.add(text("Shared inventory and worn layout. Changes save automatically. Open your cape menu once to load destinations."));
+		content.add(text("Shared inventory and worn layout. Changes save automatically. Open your cape menu to load actions and submenus."));
 		JScrollPane scroll = new JScrollPane(tree);
 		scroll.setPreferredSize(new Dimension(200, 260));
 		scroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 360));
@@ -78,7 +78,7 @@ final class CapeMenuPanel extends PluginPanel
 			}
 		});
 		content.add(destinations);
-		addButton("Add teleport", () ->
+		addButton("Add action", () ->
 		{
 			String destination = (String) destinations.getSelectedItem();
 			if (destination != null)
@@ -137,15 +137,15 @@ final class CapeMenuPanel extends PluginPanel
 		});
 		controls.add(resetButton);
 		content.add(controls);
-		content.add(text("Select a group to add teleports inside it, or Main menu for direct shortcuts. A teleport can appear more than once."));
+		content.add(text("Select a group or Main menu, then add any teleport, cape action or native submenu. Each can appear more than once."));
 		visibility.setLayout(new BoxLayout(visibility, BoxLayout.Y_AXIS));
 		content.add(new JLabel("Original teleport submenus"));
 		content.add(visibility);
-		content.add(text("Unassigned destinations stay under Other teleports. Your current left-click and Shift-click remain available."));
-		content.add(new JLabel("Other cape actions"));
+		content.add(text("Only assigned actions are added to your layout. Your current left-click and Shift-click remain available."));
+		content.add(new JLabel("Original cape action menus"));
 		capeVisibility.setLayout(new BoxLayout(capeVisibility, BoxLayout.Y_AXIS));
 		content.add(capeVisibility);
-		content.add(text("Tick the actions you want to show. Open your cape menu to load individual Spellbook and Features options."));
+		content.add(text("Tick original entries to show them. Custom shortcuts still work when their original menu is hidden."));
 		content.add(status);
 		for (Component child : content.getComponents())
 		{

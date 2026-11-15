@@ -15,6 +15,8 @@ import net.runelite.client.util.Text;
 final class CapeActionVisibility
 {
 	final Map<String, String> catalog = new LinkedHashMap<>();
+	final Map<String, MenuEntry> shortcuts = new LinkedHashMap<>();
+	final Map<String, MenuEntry[]> submenus = new LinkedHashMap<>();
 	final Set<MenuEntry> hiddenParents = new HashSet<>();
 	private final Map<Menu, MenuEntry[]> filteredChildren = new LinkedHashMap<>();
 
@@ -32,6 +34,7 @@ final class CapeActionVisibility
 			String groupName = Text.removeTags(entry.getOption()).trim();
 			catalog.put(group, groupName);
 			List<MenuEntry> retained = new ArrayList<>();
+			boolean allRecognized = true;
 			for (MenuEntry child : entry.getSubMenu().getMenuEntries())
 			{
 				boolean recognized = child.getSubMenu() == null && context.matches(child)
@@ -41,12 +44,19 @@ final class CapeActionVisibility
 				if (recognized && !childName.isEmpty() && path.length() <= 120)
 				{
 					catalog.put(path, groupName + " / " + childName);
+					shortcuts.put(groupName + " / " + childName, child);
 				}
 				else
 				{
 					recognized = false;
+					allRecognized = false;
 				}
 				if (!recognized || !layout.hiddenActions.contains(path)) { retained.add(child); }
+			}
+			if (allRecognized && !retained.isEmpty())
+			{
+				shortcuts.put(groupName, entry);
+				submenus.put(groupName, retained.toArray(new MenuEntry[0]));
 			}
 			// Keep core's active click choice intact, including a submenu selected as default.
 			if (entry == activeDefault) { continue; }

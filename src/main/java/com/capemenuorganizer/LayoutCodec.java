@@ -34,6 +34,10 @@ final class LayoutCodec
 			}
 			MenuLayout layout = gson.fromJson(object, MenuLayout.class);
 			layout.validate();
+			for (MenuLayout.Entry entry : layout.all())
+			{
+				if (!entry.isGroup()) { entry.destination = CapeActionNames.canonical(entry.destination); }
+			}
 			return layout;
 		}
 		catch (JsonParseException | IllegalStateException ex)
