@@ -1,7 +1,6 @@
 package com.capemenuorganizer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -119,7 +118,12 @@ final class CapeMenuTransformer
 				}
 				if (!group.isEmpty())
 				{
-					customDisplayOrder.add(addGroup(menu, entry.name, group));
+					List<Integer> colors = new ArrayList<>();
+					for (MenuLayout.Entry child : entry.children)
+					{
+						if (actions.containsKey(key(child.destination))) { colors.add(child.color); }
+					}
+					customDisplayOrder.add(addGroup(menu, colored(entry.name, entry.color), group, colors));
 				}
 			}
 			else
@@ -127,7 +131,7 @@ final class CapeMenuTransformer
 				Action action = actions.get(key(entry.destination));
 				if (action != null)
 				{
-					customDisplayOrder.add(action.copyTo(menu));
+					customDisplayOrder.add(action.copyTo(menu, entry.color));
 					assigned.add(key(entry.destination));
 				}
 			}
@@ -143,7 +147,7 @@ final class CapeMenuTransformer
 		unassigned.sort((a, b) -> a.option.compareToIgnoreCase(b.option));
 		if (!unassigned.isEmpty())
 		{
-			customDisplayOrder.add(addGroup(menu, "Other teleports", unassigned));
+			customDisplayOrder.add(addGroup(menu, "Other teleports", unassigned, Collections.nCopies(unassigned.size(), null)));
 		}
 		// Menu arrays are reversed. Insert custom entries below the untouched active default.
 		Collections.reverse(customDisplayOrder);
@@ -225,13 +229,18 @@ final class CapeMenuTransformer
 		return count;
 	}
 
-	private static MenuEntry addGroup(Menu menu, String name, List<Action> actions)
+	private static String colored(String name, Integer color)
+	{
+		return color == null ? name : String.format(Locale.ROOT, "<col=%06x>%s</col>", color, name);
+	}
+
+	private static MenuEntry addGroup(Menu menu, String name, List<Action> actions, List<Integer> colors)
 	{
 		MenuEntry parent = menu.createMenuEntry(-1).setOption(name).setTarget("").setType(MenuAction.RUNELITE);
 		Menu sub = parent.createSubMenu();
 		for (int i = actions.size() - 1; i >= 0; i--)
 		{
-			actions.get(i).copyTo(sub);
+			actions.get(i).copyTo(sub, colors.get(i));
 		}
 		return parent;
 	}
@@ -265,9 +274,9 @@ final class CapeMenuTransformer
 				&& itemId == other.itemId && type == other.type && callback == other.callback;
 		}
 
-		MenuEntry copyTo(Menu menu)
+		MenuEntry copyTo(Menu menu, Integer color)
 		{
-			return menu.createMenuEntry(-1).setOption(option).setTarget(target).setIdentifier(identifier)
+			return menu.createMenuEntry(-1).setOption(colored(option, color)).setTarget(target).setIdentifier(identifier)
 				.setParam0(param0).setParam1(param1).setItemId(itemId).setWorldViewId(worldViewId)
 				.setType(type).setForceLeftClick(forceLeftClick).setDeprioritized(deprioritized).onClick(callback);
 		}

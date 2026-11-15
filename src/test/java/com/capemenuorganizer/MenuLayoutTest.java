@@ -28,10 +28,12 @@ public class MenuLayoutTest
 	{
 		MenuLayout original = new MenuLayout();
 		original.addTeleport(original.addGroup("Clues").id, "Crafting Guild");
+		original.setColor(original.entries.get(0).children.get(0).id, 0x00ff00);
 		original.hiddenOriginals.add("inventory:teleports");
 		LayoutCodec codec = new LayoutCodec(new Gson());
 		MenuLayout restored = codec.decode(codec.encode(original));
 		assertEquals("Crafting Guild", restored.entries.get(0).children.get(0).destination);
+		assertEquals(Integer.valueOf(0x00ff00), restored.entries.get(0).children.get(0).color);
 		assertTrue(restored.hiddenOriginals.contains("inventory:teleports"));
 		restored.entries.clear();
 		assertEquals(1, original.entries.size());
@@ -61,6 +63,8 @@ public class MenuLayoutTest
 	{
 		MenuLayout layout = new MenuLayout();
 		MenuLayout.Entry group = layout.addGroup("Clues");
+		assertRejected(() -> layout.setColor(group.id, -1));
+		assertRejected(() -> layout.setColor(group.id, 0x1000000));
 		assertRejected(() -> layout.rename(group.id, "<col=ff0000>Clues"));
 		assertRejected(() -> layout.move(group.id, group.id, 0));
 		group.children.add(MenuLayout.Entry.group("Nested"));

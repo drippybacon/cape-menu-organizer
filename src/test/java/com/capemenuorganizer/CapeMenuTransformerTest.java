@@ -15,6 +15,27 @@ public class CapeMenuTransformerTest
 	private final CapeContext worn = new CapeContext("worn", 100, 3);
 
 	@Test
+	public void duplicateDestinationsAndGroupLabelsHaveIndependentColorsWithoutChangingActions()
+	{
+		MenuLayout layout = new MenuLayout();
+		MenuLayout.Entry group = layout.addGroup("Farming");
+		layout.setColor(group.id, 0xff8800);
+		MenuLayout.Entry green = layout.addTeleport(group.id, "Farming Guild");
+		MenuLayout.Entry blue = layout.addTeleport(group.id, "Farming Guild");
+		layout.setColor(green.id, 0x00ff00);
+		layout.setColor(blue.id, 0x0088ff);
+		MenuFixture menu = fixture("Teleports");
+		transformer.transform(menu, layout, inventory);
+		MenuEntry parent = named(menu, "<col=ff8800>Farming</col>");
+		assertNotNull(parent);
+		MenuEntry[] children = parent.getSubMenu().getMenuEntries();
+		assertEquals("<col=00ff00>Farming Guild</col>", children[1].getOption());
+		assertEquals("<col=0088ff>Farming Guild</col>", children[0].getOption());
+		assertEquals(65538, children[0].getIdentifier());
+		assertEquals(65538, children[1].getIdentifier());
+	}
+
+	@Test
 	public void sameCustomLayoutInInventoryAndEquipmentRetainsNativeActionData()
 	{
 		MenuLayout layout = new MenuLayout();

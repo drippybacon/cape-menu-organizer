@@ -22,6 +22,7 @@ final class MenuLayout
 		String id = UUID.randomUUID().toString();
 		String name;
 		String destination;
+		Integer color;
 		List<Entry> children = new ArrayList<>();
 
 		static Entry group(String name)
@@ -84,6 +85,12 @@ final class MenuLayout
 			throw new IllegalArgumentException("Only groups can be renamed.");
 		}
 		entry.name = name.trim();
+	}
+
+	void setColor(String id, Integer color)
+	{
+		checkColor(color);
+		find(id).color = color;
 	}
 
 	void remove(String id)
@@ -184,6 +191,7 @@ final class MenuLayout
 		{
 			throw new IllegalArgumentException("Invalid layout entry.");
 		}
+		checkColor(entry.color);
 		if (entry.isGroup())
 		{
 			if (child)
@@ -211,6 +219,14 @@ final class MenuLayout
 		if (!plainText(name, 40) || "Other teleports".equalsIgnoreCase(name.trim()))
 		{
 			throw new IllegalArgumentException("Use a plain group name of 1–40 characters (except Other teleports).");
+		}
+	}
+
+	private static void checkColor(Integer color)
+	{
+		if (color != null && (color < 0 || color > 0xffffff))
+		{
+			throw new IllegalArgumentException("Invalid entry color.");
 		}
 	}
 

@@ -1,6 +1,6 @@
 # Cape Menu Organizer design
 
-Status: proposed for user approval.
+Status: approved by user on 2026-11-15, including duplicate shortcuts and hideable original teleport submenus.
 
 ## Purpose and scope
 
@@ -8,7 +8,7 @@ Make max cape teleports predictable in inventory and equipment by displaying the
 
 Version one supports the regular max cape. Achievement diary cape support is deferred until an owner can verify it. Cosmetic max cape variants are included only if they expose the same teleport functionality; combat cape combinations are not assumed to do so.
 
-Proposed display name: Cape Menu Organizer. Intended new repository: `C:/Users/sebas/Documents/git/runelite-plugins/cape-menu-organizer/`. No repository has been created yet.
+Proposed display name: Cape Menu Organizer. Intended new repository: `C:/Users/sebas/Documents/git/runelite-plugins/cape-menu-organizer/`. The repository was created from the official template and is being validated locally.
 
 ## Approaches
 
@@ -16,7 +16,7 @@ Proposed display name: Cape Menu Organizer. Intended new repository: `C:/Users/s
 2. Favorites plus predefined categories: convenient shortcuts, but still constrains organization.
 3. User-created groups and direct teleport entries: the user's requested approach. One shared layout controls both item contexts, and a destination may appear multiple times, including in different groups.
 
-The proposed editor is a RuneLite sidebar panel. Editing through the game menu would crowd the menu and complicate managing many entries. Sidebar editing is a builder recommendation, pending approval with this design.
+The proposed editor is a RuneLite sidebar panel. Editing through the game menu would crowd the menu and complicate managing many entries. Sidebar editing is part of the approved design.
 
 ## Player experience
 
@@ -24,11 +24,13 @@ The sidebar contains a destination catalog and an ordered layout editor. The pla
 
 Groups contain teleport entries only: one level of submenus in version one. The same destination can appear at the root and in several groups. Removing a shortcut removes only that occurrence. Removing a group removes its shortcuts, never the underlying teleport capability. Empty groups are not displayed in the game menu.
 
+User addition during implementation: each custom group and teleport occurrence has an optional RGB text color. A color picker and reset-color control edit the selected entry. Copies of the same destination can have different colors. Colors affect presentation only; action identity and metadata remain unchanged. Unassigned/native menu entries retain their native presentation.
+
 Use clear Add, Rename, Remove, Move up, and Move down controls for the first version; drag-and-drop is optional later. Group names must be nonempty plain text with a practical length limit and no game formatting tags. Saving edits takes effect when the next menu is opened.
 
 Unassigned destinations remain available under a reserved `Other teleports` submenu. A reset action restores a supplied matching layout after confirmation. Disabling the plugin restores normal menus immediately.
 
-The editor also lets the player show or hide each original teleport submenu independently in each context. Hiding an original submenu only removes its native presentation; its destinations remain available to custom groups and direct shortcuts. The `Other teleports` fallback ensures unassigned destinations remain reachable even when original teleport submenus are hidden. These visibility controls do not hide non-teleport cape menus such as spellbook changes or features. Default original-submenu visibility is a builder choice to present explicitly before implementation.
+The editor also lets the player show or hide each original teleport submenu independently in each context. Hiding an original submenu only removes its native presentation; its destinations remain available to custom groups and direct shortcuts. The `Other teleports` fallback ensures unassigned destinations remain reachable even when original teleport submenus are hidden. These visibility controls do not hide non-teleport cape menus such as spellbook changes or features. Original teleport submenus start hidden to give a matching custom layout; the native active default entry is always retained, including if it is a submenu.
 
 The custom right-click teleport section has identical names and order in both contexts. Non-teleport actions such as Wear, Remove, Use, Drop, Examine, spellbook changes and cape features retain their context-appropriate behavior. Existing left-click and Shift-click choices remain functional; this plugin does not change another plugin's settings. An already promoted click destination may also appear in the organized section.
 

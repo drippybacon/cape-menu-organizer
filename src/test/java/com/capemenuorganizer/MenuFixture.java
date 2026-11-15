@@ -40,6 +40,7 @@ final class MenuFixture implements Menu
 
 	static final class Entry implements MenuEntry
 	{
+		Widget widget;
 		private String option = "", target = "";
 		private int identifier, param0, param1, itemId = -1, worldViewId;
 		private MenuAction type = MenuAction.RUNELITE;
@@ -70,7 +71,7 @@ final class MenuFixture implements Menu
 		@Override public int getItemOp() { return identifier & 65535; }
 		@Override public int getItemId() { return itemId; }
 		@Override public MenuEntry setItemId(int v) { itemId = v; return this; }
-		@Override public Widget getWidget() { return null; }
+		@Override public Widget getWidget() { return widget; }
 		@Override public NPC getNpc() { return null; }
 		@Override public Player getPlayer() { return null; }
 		@Override public Actor getActor() { return null; }
